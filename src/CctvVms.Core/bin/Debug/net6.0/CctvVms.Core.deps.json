@@ -1,0 +1,41 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v6.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v6.0": {
+      "CctvVms.Core/1.0.0": {
+        "dependencies": {
+          "LibVLCSharp": "3.8.5"
+        },
+        "runtime": {
+          "CctvVms.Core.dll": {}
+        }
+      },
+      "LibVLCSharp/3.8.5": {
+        "runtime": {
+          "lib/net6.0/LibVLCSharp.dll": {
+            "assemblyVersion": "3.8.5.0",
+            "fileVersion": "3.8.5.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "CctvVms.Core/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "LibVLCSharp/3.8.5": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-dO8YNU5La0wtUM7mUs+V5PBXF9bDTZ5jW+YB2u4cdq633Q+tHAX2HyJrUVaDhH2VvdPVFDghbKfH/GdvHdya6g==",
+      "path": "libvlcsharp/3.8.5",
+      "hashPath": "libvlcsharp.3.8.5.nupkg.sha512"
+    }
+  }
+}

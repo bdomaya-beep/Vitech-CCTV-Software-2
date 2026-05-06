@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CctvVms.App/CctvVms.App.csproj" />
+    <Project Path="src/CctvVms.Core/CctvVms.Core.csproj" />
+    <Project Path="src/CctvVms.Data/CctvVms.Data.csproj" />
+  </Folder>
+</Solution>

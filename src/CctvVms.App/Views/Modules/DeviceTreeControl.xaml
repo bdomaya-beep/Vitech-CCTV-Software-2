@@ -1,0 +1,47 @@
+<UserControl x:Class="CctvVms.App.Views.Modules.DeviceTreeControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:CctvVms.App.ViewModels"
+             mc:Ignorable="d">
+    <Grid Margin="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <Button Content="Add" Width="62" Margin="0,0,6,0" Click="AddButton_OnClick" />
+            <Button Content="Refresh" Width="72" Margin="0,0,6,0" Command="{Binding RefreshCommand}" />
+            <Button Content="Discover" Width="78" Click="DiscoverButton_OnClick" />
+        </StackPanel>
+
+        <TreeView Grid.Row="1"
+              ItemsSource="{Binding RootNodes}"
+              SelectedItemChanged="TreeView_OnSelectedItemChanged"
+              PreviewMouseMove="TreeView_OnPreviewMouseMove"
+              VirtualizingPanel.IsVirtualizing="True"
+              VirtualizingPanel.VirtualizationMode="Recycling"
+              ScrollViewer.CanContentScroll="True">
+            <TreeView.Resources>
+                <HierarchicalDataTemplate DataType="{x:Type viewModels:DeviceTreeNodeViewModel}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Name}" />
+                        <TextBlock Text="  (" Foreground="#6E84A3" />
+                        <TextBlock Text="{Binding StatusText}" Foreground="#6E84A3" />
+                        <TextBlock Text=")" Foreground="#6E84A3" />
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+            </TreeView.Resources>
+
+            <TreeView.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Add device" Command="{Binding AddDeviceCommand}" />
+                    <MenuItem Header="Edit device" Command="{Binding EditSelectedCommand}" />
+                    <MenuItem Header="Delete device" Command="{Binding DeleteSelectedCommand}" />
+                </ContextMenu>
+            </TreeView.ContextMenu>
+        </TreeView>
+    </Grid>
+</UserControl>

@@ -1,0 +1,156 @@
+{
+  "version": 3,
+  "targets": {
+    "net6.0": {
+      "LibVLCSharp/3.8.5": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/LibVLCSharp.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/LibVLCSharp.dll": {
+            "related": ".xml"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "LibVLCSharp/3.8.5": {
+      "sha512": "dO8YNU5La0wtUM7mUs+V5PBXF9bDTZ5jW+YB2u4cdq633Q+tHAX2HyJrUVaDhH2VvdPVFDghbKfH/GdvHdya6g==",
+      "type": "package",
+      "path": "libvlcsharp/3.8.5",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "icon.png",
+        "lib/monoandroid81/LibVLCSharp.Android.AWindow.dll",
+        "lib/monoandroid81/LibVLCSharp.dll",
+        "lib/monoandroid81/LibVLCSharp.xml",
+        "lib/net40/LibVLCSharp.dll",
+        "lib/net40/LibVLCSharp.xml",
+        "lib/net471/LibVLCSharp.dll",
+        "lib/net471/LibVLCSharp.xml",
+        "lib/net6.0-android31.0/LibVLCSharp.dll",
+        "lib/net6.0-android31.0/LibVLCSharp.xml",
+        "lib/net6.0-ios16.1/LibVLCSharp.dll",
+        "lib/net6.0-ios16.1/LibVLCSharp.xml",
+        "lib/net6.0-macos13.0/LibVLCSharp.dll",
+        "lib/net6.0-macos13.0/LibVLCSharp.xml",
+        "lib/net6.0-tvos16.1/LibVLCSharp.dll",
+        "lib/net6.0-tvos16.1/LibVLCSharp.xml",
+        "lib/net6.0-windows10.0.17763/LibVLCSharp.dll",
+        "lib/net6.0-windows10.0.17763/LibVLCSharp.pri",
+        "lib/net6.0-windows10.0.17763/LibVLCSharp.xml",
+        "lib/net6.0/LibVLCSharp.dll",
+        "lib/net6.0/LibVLCSharp.xml",
+        "lib/netstandard1.1/LibVLCSharp.dll",
+        "lib/netstandard1.1/LibVLCSharp.xml",
+        "lib/netstandard2.0/LibVLCSharp.dll",
+        "lib/netstandard2.0/LibVLCSharp.xml",
+        "lib/netstandard2.1/LibVLCSharp.dll",
+        "lib/netstandard2.1/LibVLCSharp.xml",
+        "lib/uap10.0.18362/LibVLCSharp.dll",
+        "lib/uap10.0.18362/LibVLCSharp.pri",
+        "lib/uap10.0.18362/LibVLCSharp.xml",
+        "lib/uap10.0.18362/LibVLCSharp/LibVLCSharp.xr.xml",
+        "lib/xamarinios10/LibVLCSharp.dll",
+        "lib/xamarinios10/LibVLCSharp.xml",
+        "lib/xamarinmac20/LibVLCSharp.dll",
+        "lib/xamarinmac20/LibVLCSharp.xml",
+        "libvlcsharp.3.8.5.nupkg.sha512",
+        "libvlcsharp.nuspec"
+      ]
+    }
+  },
+  "projectFileDependencyGroups": {
+    "net6.0": [
+      "LibVLCSharp >= 3.8.5"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\Vitech\\.nuget\\packages\\": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "C:\\Users\\Vitech\\Practice\\CCTV Software System\\src\\CctvVms.Core\\CctvVms.Core.csproj",
+      "projectName": "CctvVms.Core",
+      "projectPath": "C:\\Users\\Vitech\\Practice\\CCTV Software System\\src\\CctvVms.Core\\CctvVms.Core.csproj",
+      "packagesPath": "C:\\Users\\Vitech\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Vitech\\Practice\\CCTV Software System\\src\\CctvVms.Core\\obj\\",
+      "projectStyle": "PackageReference",
+      "configFilePaths": [
+        "C:\\Users\\Vitech\\AppData\\Roaming\\NuGet\\NuGet.Config"
+      ],
+      "originalTargetFrameworks": [
+        "net6.0"
+      ],
+      "sources": {
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net6.0": {
+          "targetAlias": "net6.0",
+          "projectReferences": {}
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "10.0.100"
+    },
+    "frameworks": {
+      "net6.0": {
+        "targetAlias": "net6.0",
+        "dependencies": {
+          "LibVLCSharp": {
+            "target": "Package",
+            "version": "[3.8.5, )"
+          }
+        },
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48",
+          "net481"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.AspNetCore.App.Ref",
+            "version": "[6.0.36, 6.0.36]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Ref",
+            "version": "[6.0.36, 6.0.36]"
+          },
+          {
+            "name": "Microsoft.WindowsDesktop.App.Ref",
+            "version": "[6.0.36, 6.0.36]"
+          }
+        ],
+        "frameworkReferences": {
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.103\\RuntimeIdentifierGraph.json"
+      }
+    }
+  }
+}

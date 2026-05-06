@@ -1,0 +1,12 @@
+C:\Users\Vitech\Practice\CCTV Software System\src\CctvVms.Core\obj\Debug\net6.0\CctvVms.Core.csproj.AssemblyReference.cache
+C:\Users\Vitech\Practice\CCTV Software System\src\CctvVms.Core\obj\Debug\net6.0\CctvVms.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Vitech\Practice\CCTV Software System\src\CctvVms.Core\obj\Debug\net6.0\CctvVms.Core.AssemblyInfoInputs.cache
+C:\Users\Vitech\Practice\CCTV Software System\src\CctvVms.Core\obj\Debug\net6.0\CctvVms.Core.AssemblyInfo.cs
+C:\Users\Vitech\Practice\CCTV Software System\src\CctvVms.Core\obj\Debug\net6.0\CctvVms.Core.csproj.CoreCompileInputs.cache
+C:\Users\Vitech\Practice\CCTV Software System\src\CctvVms.Core\bin\Debug\net6.0\CctvVms.Core.deps.json
+C:\Users\Vitech\Practice\CCTV Software System\src\CctvVms.Core\bin\Debug\net6.0\CctvVms.Core.dll
+C:\Users\Vitech\Practice\CCTV Software System\src\CctvVms.Core\bin\Debug\net6.0\CctvVms.Core.pdb
+C:\Users\Vitech\Practice\CCTV Software System\src\CctvVms.Core\obj\Debug\net6.0\CctvVms.Core.dll
+C:\Users\Vitech\Practice\CCTV Software System\src\CctvVms.Core\obj\Debug\net6.0\refint\CctvVms.Core.dll
+C:\Users\Vitech\Practice\CCTV Software System\src\CctvVms.Core\obj\Debug\net6.0\CctvVms.Core.pdb
+C:\Users\Vitech\Practice\CCTV Software System\src\CctvVms.Core\obj\Debug\net6.0\ref\CctvVms.Core.dll
