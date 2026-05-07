@@ -9,6 +9,7 @@ public sealed class VideoTileViewModel : ObservableObject
     private string _cameraId = string.Empty;
     private string _cameraName = "Empty";
     private bool _isFocused;
+    private bool _isDeploying;
     private DeviceStatus _cameraStatus = DeviceStatus.Unknown;
     private StreamType _streamType = StreamType.Sub;
     private MediaPlayer? _mediaPlayer;
@@ -35,6 +36,12 @@ public sealed class VideoTileViewModel : ObservableObject
     {
         get => _isFocused;
         set => SetProperty(ref _isFocused, value);
+    }
+
+    public bool IsDeploying
+    {
+        get => _isDeploying;
+        set => SetProperty(ref _isDeploying, value);
     }
 
     public DeviceStatus CameraStatus

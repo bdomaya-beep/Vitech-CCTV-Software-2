@@ -11,6 +11,7 @@ public sealed class StreamEngine : IStreamEngine, IDisposable
     private readonly IStreamPoolManager _pool;
     private readonly StreamEngineOptions _options;
     private readonly ConcurrentDictionary<string, StreamSession> _sessions = new();
+    private readonly ConcurrentDictionary<string, SemaphoreSlim> _cameraGuards = new();
     private readonly PeriodicTimer _timer;
     private readonly CancellationTokenSource _cts = new();
     private readonly Task _monitorTask;
@@ -32,55 +33,84 @@ public sealed class StreamEngine : IStreamEngine, IDisposable
             throw new InvalidOperationException("Camera ID is required.");
         }
 
-        if (streamType == StreamType.Main)
+        var cameraGuard = _cameraGuards.GetOrAdd(camera.Id, static _ => new SemaphoreSlim(1, 1));
+        await cameraGuard.WaitAsync(cancellationToken);
+        try
         {
-            var activeMain = _sessions.Values.Count(static s => s.StreamType == StreamType.Main);
-            if (activeMain >= _options.MaxMainStreams)
+            if (streamType == StreamType.Main)
             {
-                streamType = StreamType.Sub;
+                var activeMain = _sessions.Values.Count(static s => s.StreamType == StreamType.Main);
+                if (activeMain >= _options.MaxMainStreams)
+                {
+                    streamType = StreamType.Sub;
+                }
             }
+
+            var url = ResolveUrl(camera, streamType);
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                throw new InvalidOperationException("No stream URL configured for selected stream type.");
+            }
+
+            if (_sessions.TryGetValue(camera.Id, out var existing))
+            {
+                existing.LastHeartbeatUtc = DateTime.UtcNow;
+                return ToInfo(existing, true);
+            }
+
+            var player = _pool.Acquire(camera.Id, streamType);
+
+            var session = new StreamSession
+            {
+                CameraId = camera.Id,
+                StreamType = streamType,
+                SourceUrl = url,
+                Player = player,
+                LastHeartbeatUtc = DateTime.UtcNow
+            };
+
+            _sessions[camera.Id] = session;
+            // NOTE: Do NOT call player.Play() here.
+            // The caller must set tile.MediaPlayer first so VideoView binds its HWND,
+            // then call BeginPlayAsync(). Calling Play() before VideoView is ready
+            // causes VLC to open a new native window instead of rendering in-app.
+            return ToInfo(session, false);
+        }
+        finally
+        {
+            cameraGuard.Release();
+        }
+    }
+
+    public Task BeginPlayAsync(string cameraId, CancellationToken cancellationToken = default)
+    {
+        if (_sessions.TryGetValue(cameraId, out var session))
+        {
+            var media = new Media(_libVlc, session.SourceUrl, FromType.FromLocation);
+            session.Player.Play(media);
+            // media ref will be cleaned up by VLC internally after it starts loading
+            session.LastHeartbeatUtc = DateTime.UtcNow;
         }
 
-        var url = ResolveUrl(camera, streamType);
-        if (string.IsNullOrWhiteSpace(url))
-        {
-            throw new InvalidOperationException("No stream URL configured for selected stream type.");
-        }
-
-        if (_sessions.TryGetValue(camera.Id, out var existing))
-        {
-            existing.LastHeartbeatUtc = DateTime.UtcNow;
-            return ToInfo(existing, true);
-        }
-
-        var player = _pool.Acquire(camera.Id, streamType);
-        using var media = new Media(_libVlc, url, FromType.FromLocation);
-        player.Play(media);
-
-        var session = new StreamSession
-        {
-            CameraId = camera.Id,
-            StreamType = streamType,
-            SourceUrl = url,
-            Player = player,
-            LastHeartbeatUtc = DateTime.UtcNow
-        };
-
-        _sessions[camera.Id] = session;
-
-        await Task.CompletedTask;
-        return ToInfo(session, true);
+        return Task.CompletedTask;
     }
 
     public async Task StopStreamAsync(string cameraId, CancellationToken cancellationToken = default)
     {
-        if (_sessions.TryRemove(cameraId, out var session))
+        var cameraGuard = _cameraGuards.GetOrAdd(cameraId, static _ => new SemaphoreSlim(1, 1));
+        await cameraGuard.WaitAsync(cancellationToken);
+        try
         {
-            session.Dispose();
-            _pool.Release(cameraId);
+            if (_sessions.TryRemove(cameraId, out var session))
+            {
+                session.Dispose();
+                _pool.Release(cameraId);
+            }
         }
-
-        await Task.CompletedTask;
+        finally
+        {
+            cameraGuard.Release();
+        }
     }
 
     public async Task<ActiveStreamInfo> SwitchStreamAsync(CameraEntity camera, StreamType newType, CancellationToken cancellationToken = default)
@@ -138,7 +168,13 @@ public sealed class StreamEngine : IStreamEngine, IDisposable
 
                 foreach (var session in _sessions.Values)
                 {
-                    if (!session.Player.IsPlaying)
+                    // Only restart players that have genuinely failed.
+                    // Buffering and Opening are transient states — restarting them
+                    // creates an infinite restart loop while the stream is loading.
+                    var state = session.Player.State;
+                    if (state == VLCState.Error ||
+                        state == VLCState.Ended ||
+                        state == VLCState.Stopped)
                     {
                         using var media = new Media(_libVlc, session.SourceUrl, FromType.FromLocation);
                         session.Player.Play(media);

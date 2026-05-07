@@ -15,6 +15,9 @@ public sealed class PlaybackViewModel : ObservableObject
     private double _timelinePosition;
     private string _playbackState = "Stopped";
     private MediaPlayer? _playbackPlayer;
+    private readonly RelayCommand _pauseCommand;
+    private readonly RelayCommand _fastForwardCommand;
+    private readonly RelayCommand _rewindCommand;
 
     public PlaybackViewModel(IDataStoreService store, IStreamEngine streamEngine)
     {
@@ -22,9 +25,12 @@ public sealed class PlaybackViewModel : ObservableObject
         _streamEngine = streamEngine;
 
         PlayCommand = new AsyncRelayCommand(PlayAsync, () => SelectedCamera is not null);
-        PauseCommand = new RelayCommand(() => PlaybackState = "Paused", () => PlaybackPlayer is not null);
-        FastForwardCommand = new RelayCommand(() => TimelinePosition = Math.Min(86400, TimelinePosition + 30));
-        RewindCommand = new RelayCommand(() => TimelinePosition = Math.Max(0, TimelinePosition - 30));
+        _pauseCommand = new RelayCommand(PausePlayback, () => PlaybackPlayer is not null);
+        _fastForwardCommand = new RelayCommand(() => SeekBySeconds(30), () => PlaybackPlayer is not null);
+        _rewindCommand = new RelayCommand(() => SeekBySeconds(-30), () => PlaybackPlayer is not null);
+        PauseCommand = _pauseCommand;
+        FastForwardCommand = _fastForwardCommand;
+        RewindCommand = _rewindCommand;
     }
 
     public ObservableCollection<CameraEntity> Cameras { get; } = new();
@@ -62,7 +68,15 @@ public sealed class PlaybackViewModel : ObservableObject
     public MediaPlayer? PlaybackPlayer
     {
         get => _playbackPlayer;
-        set => SetProperty(ref _playbackPlayer, value);
+        set
+        {
+            if (SetProperty(ref _playbackPlayer, value))
+            {
+                _pauseCommand.NotifyCanExecuteChanged();
+                _fastForwardCommand.NotifyCanExecuteChanged();
+                _rewindCommand.NotifyCanExecuteChanged();
+            }
+        }
     }
 
     public System.Windows.Input.ICommand PlayCommand { get; }
@@ -88,8 +102,45 @@ public sealed class PlaybackViewModel : ObservableObject
             return;
         }
 
-        var active = await _streamEngine.StartStreamAsync(SelectedCamera, StreamType.Playback);
-        PlaybackPlayer = active.MediaPlayer;
+        if (PlaybackPlayer is not null)
+        {
+            PlaybackPlayer.Play();
+        }
+        else
+        {
+            var active = await _streamEngine.StartStreamAsync(SelectedCamera, StreamType.Playback);
+            PlaybackPlayer = active.MediaPlayer;
+        }
+
+        PlaybackState = "Playing";
+    }
+
+    private void PausePlayback()
+    {
+        if (PlaybackPlayer is null)
+        {
+            return;
+        }
+
+        PlaybackPlayer.Pause();
+        PlaybackState = "Paused";
+    }
+
+    private void SeekBySeconds(int seconds)
+    {
+        if (PlaybackPlayer is null)
+        {
+            return;
+        }
+
+        var target = PlaybackPlayer.Time + seconds * 1000L;
+        if (target < 0)
+        {
+            target = 0;
+        }
+
+        PlaybackPlayer.Time = target;
+        TimelinePosition = target / 1000d;
         PlaybackState = "Playing";
     }
 }

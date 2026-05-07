@@ -20,11 +20,10 @@
         </StackPanel>
 
         <ItemsControl x:Name="TilesItemsControl"
-                  Grid.Row="1"
-                  ItemsSource="{Binding Tiles}"
-                  Margin="12,0,12,12"
-                  Visibility="{Binding IsZoomedIn, Converter={StaticResource BoolToInverseVisibilityConverter}}"
-                  PreviewMouseLeftButtonDown="TilesItemsControl_OnPreviewMouseLeftButtonDown">
+              Grid.Row="1"
+              ItemsSource="{Binding Tiles}"
+              Margin="12,0,12,12"
+              Visibility="{Binding IsZoomedIn, Converter={StaticResource BoolToInverseVisibilityConverter}}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <UniformGrid Rows="{Binding Rows}" Columns="{Binding Columns}" />
@@ -33,11 +32,17 @@
 
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <Border Margin="3" BorderBrush="#2A3B55" BorderThickness="1" CornerRadius="4" Background="#0B1321" AllowDrop="True" Drop="Tile_OnDrop">
+                    <Border Margin="3" BorderBrush="#2A3B55" BorderThickness="1" CornerRadius="4" Background="#0B1321" AllowDrop="True" Drop="Tile_OnDrop" PreviewMouseLeftButtonDown="Tile_OnPreviewMouseLeftButtonDown" MouseLeftButtonDown="Tile_OnMouseLeftButtonDown">
                         <Grid Tag="{Binding TileId}">
-                            <vlc:VideoView x:Name="TileVideo" MediaPlayer="{Binding MediaPlayer}" Visibility="{Binding CameraId, Converter={StaticResource StringToVisibilityConverter}}" />
+                            <vlc:VideoView x:Name="TileVideo"
+                                           MediaPlayer="{Binding MediaPlayer}"
+                                           Visibility="{Binding CameraId, Converter={StaticResource StringToVisibilityConverter}}"
+                                           IsHitTestVisible="False" />
                             <Border x:Name="EmptyOverlay" Background="#1E2A3A" Visibility="{Binding CameraId, Converter={StaticResource StringToInverseVisibilityConverter}}">
                                 <TextBlock Text="Drop Camera" Foreground="#7F97B8" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                            </Border>
+                            <Border Background="#AA07111D" Visibility="{Binding IsDeploying, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Text="Deploying stream..." Foreground="#9FD8C6" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="SemiBold" />
                             </Border>
                             <Border Background="#8808111D" Height="24" VerticalAlignment="Top">
                                 <DockPanel Margin="8,0">
@@ -47,8 +52,8 @@
                                 </DockPanel>
                             </Border>
                             <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Right" Orientation="Horizontal" Margin="0,0,6,6">
-                                <Button Content="Focus" Width="56" Height="24" Margin="0,0,4,0" Command="{Binding DataContext.FocusTileCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
-                                <Button Content="Clear" Width="56" Height="24" Command="{Binding DataContext.ClearTileCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                <Button Content="Focus" Width="56" Height="24" Margin="0,0,4,0" IsEnabled="{Binding IsDeploying, Converter={StaticResource BoolToInverseVisibilityConverter}}" Command="{Binding DataContext.FocusTileCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                <Button Content="Clear" Width="56" Height="24" IsEnabled="{Binding IsDeploying, Converter={StaticResource BoolToInverseVisibilityConverter}}" Command="{Binding DataContext.ClearTileCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
                             </StackPanel>
                         </Grid>
                     </Border>

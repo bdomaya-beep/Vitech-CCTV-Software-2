@@ -32,6 +32,13 @@
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="VMS" FontSize="21" FontWeight="Bold" Foreground="#12B886" Margin="0,0,18,0" />
                     <Button Content="Live View" Width="120" Height="34" Margin="0,0,8,0" Command="{Binding SwitchModuleCommand}" CommandParameter="LiveView" />
+                    <ComboBox Width="150" Height="34" Margin="0,0,8,0"
+                              ItemsSource="{Binding LiveWorkspaces}"
+                              DisplayMemberPath="Name"
+                              SelectedItem="{Binding SelectedLiveWorkspace}" />
+                    <Button Content="+ New Live" Width="110" Height="34" Margin="0,0,8,0" Command="{Binding CreateLiveWorkspaceCommand}" />
+                    <Button Content="Remove" Width="90" Height="34" Margin="0,0,8,0" Command="{Binding RemoveLiveWorkspaceCommand}" />
+                    <Button Content="Detach Live View" Width="140" Height="34" Margin="0,0,8,0" Click="DetachLiveView_OnClick" />
                     <Button Content="Playback" Width="120" Height="34" Margin="0,0,8,0" Command="{Binding SwitchModuleCommand}" CommandParameter="Playback" />
                     <Button Content="Device Manager" Width="140" Height="34" Margin="0,0,8,0" Command="{Binding SwitchModuleCommand}" CommandParameter="DeviceManager" />
                     <Button Content="Settings" Width="110" Height="34" Command="{Binding SwitchModuleCommand}" CommandParameter="Settings" />

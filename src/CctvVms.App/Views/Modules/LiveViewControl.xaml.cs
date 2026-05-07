@@ -1,7 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 using CctvVms.App.ViewModels;
 
 namespace CctvVms.App.Views.Modules;
@@ -21,33 +20,57 @@ public partial class LiveViewControl : UserControl
         };
     }
 
-    private void TilesItemsControl_OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private void Tile_OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.ClickCount != 2 || DataContext is not LiveViewViewModel vm)
+        if (e.ClickCount != 2)
         {
             return;
         }
 
-        var node = e.OriginalSource as DependencyObject;
-        while (node is not null)
+        e.Handled = true;
+
+        if (DataContext is not LiveViewViewModel vm)
         {
-            if (node is Grid grid && grid.Tag is string tileId)
-            {
-                var tile = vm.Tiles.FirstOrDefault(t => t.TileId == tileId);
-                if (tile is not null && !string.IsNullOrWhiteSpace(tile.CameraId))
-                {
-                    vm.ZoomTileCommand?.Execute(tile);
-                    e.Handled = true;
-                }
+            return;
+        }
 
-                return;
-            }
+        if (sender is not Border border || border.DataContext is not VideoTileViewModel tile)
+        {
+            return;
+        }
 
-            node = VisualTreeHelper.GetParent(node);
+        if (!string.IsNullOrWhiteSpace(tile.CameraId))
+        {
+            vm.ZoomTileCommand?.Execute(tile);
         }
     }
 
-    private async void Tile_OnDrop(object sender, DragEventArgs e)
+    private void Tile_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount != 2)
+        {
+            return;
+        }
+
+        e.Handled = true;
+
+        if (DataContext is not LiveViewViewModel vm)
+        {
+            return;
+        }
+
+        if (sender is not Border border || border.DataContext is not VideoTileViewModel tile)
+        {
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(tile.CameraId))
+        {
+            vm.ZoomTileCommand?.Execute(tile);
+        }
+    }
+
+    private void Tile_OnDrop(object sender, DragEventArgs e)
     {
         if (DataContext is not LiveViewViewModel vm)
         {
@@ -65,6 +88,7 @@ public partial class LiveViewControl : UserControl
             return;
         }
 
-        await vm.AssignCameraToTileAsync(tileId, cameraId);
+        vm.BeginAssignCameraToTile(tileId, cameraId);
+        e.Handled = true;
     }
 }
