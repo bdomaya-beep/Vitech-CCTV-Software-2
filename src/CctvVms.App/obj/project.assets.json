@@ -2340,11 +2340,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "c:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.App\\CctvVms.App.csproj",
+      "projectUniqueName": "C:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.App\\CctvVms.App.csproj",
       "projectName": "CctvVms.App",
-      "projectPath": "c:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.App\\CctvVms.App.csproj",
+      "projectPath": "C:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.App\\CctvVms.App.csproj",
       "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
-      "outputPath": "c:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.App\\obj\\",
+      "outputPath": "C:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.App\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\User\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -2359,11 +2359,11 @@
         "net6.0-windows7.0": {
           "targetAlias": "net6.0-windows",
           "projectReferences": {
-            "c:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.Core\\CctvVms.Core.csproj": {
-              "projectPath": "c:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.Core\\CctvVms.Core.csproj"
+            "C:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.Core\\CctvVms.Core.csproj": {
+              "projectPath": "C:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.Core\\CctvVms.Core.csproj"
             },
-            "c:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.Data\\CctvVms.Data.csproj": {
-              "projectPath": "c:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.Data\\CctvVms.Data.csproj"
+            "C:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.Data\\CctvVms.Data.csproj": {
+              "projectPath": "C:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.Data\\CctvVms.Data.csproj"
             }
           }
         }

@@ -81,6 +81,14 @@ public sealed class MainViewModel : ObservableObject
     }
 
     public string SystemStatusText => $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} | Active streams: {LiveView.Tiles.Count(t => t.MediaPlayer is not null)}";
+    public string ActiveModule => _currentModule.ToString();
+    public string ActiveModuleTitle => _currentModule switch {
+        WorkspaceModule.LiveView => "Live View",
+        WorkspaceModule.Playback => "Playback",
+        WorkspaceModule.DeviceManager => "Device Manager",
+        WorkspaceModule.Settings => "Settings",
+        _ => "Live View"
+    };
 
     public string SelectedCameraName => LiveView.SelectedTile?.CameraName ?? "None";
     public string SelectedCameraStatus => LiveView.SelectedTile?.CameraStatusText ?? "Unknown";
@@ -118,6 +126,8 @@ public sealed class MainViewModel : ObservableObject
         });
     }
 
+    public void SwitchModule(string module) => SwitchModule((object?)module);
+
     private void SwitchModule(object? parameter)
     {
         var module = parameter?.ToString();
@@ -126,7 +136,6 @@ public sealed class MainViewModel : ObservableObject
             case "LiveView":
                 CurrentModule = WorkspaceModule.LiveView;
                 CurrentModuleViewModel = LiveView;
-                _ = LiveView.RebindAndResumeAsync();
                 break;
             case "Playback":
                 CurrentModule = WorkspaceModule.Playback;
@@ -143,7 +152,6 @@ public sealed class MainViewModel : ObservableObject
             default:
                 CurrentModule = WorkspaceModule.LiveView;
                 CurrentModuleViewModel = LiveView;
-                _ = LiveView.RebindAndResumeAsync();
                 break;
         }
 
@@ -153,6 +161,8 @@ public sealed class MainViewModel : ObservableObject
         RaisePropertyChanged(nameof(SelectedCameraBitrate));
         RaisePropertyChanged(nameof(SelectedCameraResolution));
         RaisePropertyChanged(nameof(SelectedCameraFps));
+        RaisePropertyChanged(nameof(ActiveModule));
+        RaisePropertyChanged(nameof(ActiveModuleTitle));
     }
 
     private async Task CreateLiveWorkspaceAsync()
@@ -267,6 +277,8 @@ public sealed class MainViewModel : ObservableObject
             RaisePropertyChanged(nameof(SelectedCameraBitrate));
             RaisePropertyChanged(nameof(SelectedCameraResolution));
             RaisePropertyChanged(nameof(SelectedCameraFps));
+        RaisePropertyChanged(nameof(ActiveModule));
+        RaisePropertyChanged(nameof(ActiveModuleTitle));
             RaisePropertyChanged(nameof(SystemStatusText));
         }
     }
@@ -276,3 +288,6 @@ public sealed class MainViewModel : ObservableObject
         RaisePropertyChanged(nameof(SystemStatusText));
     }
 }
+
+
+

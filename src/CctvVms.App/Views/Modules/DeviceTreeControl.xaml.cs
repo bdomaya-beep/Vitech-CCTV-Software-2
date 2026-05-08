@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -87,5 +88,32 @@ public partial class DeviceTreeControl : UserControl
         }
 
         await vm.DiscoverByRangeAsync(dialog.SubnetOrRange);
+    }
+
+    private async void TreeView_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (DataContext is not DeviceTreeViewModel treeVm)
+            return;
+
+        // Only fire on device (NVR) nodes, not camera nodes.
+        if (treeVm.SelectedNode is not { IsDeviceNode: true } deviceNode)
+            return;
+
+        // Find the LiveViewViewModel from the window DataContext.
+        var window = Window.GetWindow(this);
+        if (window?.DataContext is not CctvVms.App.ViewModels.MainViewModel mainVm)
+            return;
+
+        // Switch to Live View if not already there.
+        mainVm.SwitchModule("LiveView");
+
+        try
+        {
+            await mainVm.LiveView.PopulateFromDeviceAsync(deviceNode);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"PopulateFromDevice failed: {ex.Message}");
+        }
     }
 }

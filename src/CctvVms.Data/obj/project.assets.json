@@ -427,8 +427,8 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "projectReferences": {
-            "c:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.Core\\CctvVms.Core.csproj": {
-              "projectPath": "c:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.Core\\CctvVms.Core.csproj"
+            "C:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.Core\\CctvVms.Core.csproj": {
+              "projectPath": "C:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.Core\\CctvVms.Core.csproj"
             }
           }
         }

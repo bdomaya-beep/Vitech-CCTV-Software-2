@@ -5,73 +5,226 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:modules="clr-namespace:CctvVms.App.Views.Modules"
         mc:Ignorable="d"
-        Title="CCTV VMS Control Center"
-        Width="1600"
-        Height="930"
-        MinWidth="1280"
-        MinHeight="760"
-        Background="#0A111D">
+        Title="Vitech VMS"
+        Width="1600" Height="930"
+        MinWidth="1280" MinHeight="760"
+        Background="#080E18"
+        WindowStyle="SingleBorderWindow">
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="56" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="320" />
+            <ColumnDefinition Width="72" />
+            <ColumnDefinition Width="260" />
             <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="290" />
+            <ColumnDefinition Width="240" />
         </Grid.ColumnDefinitions>
 
-        <Border Grid.Row="0" Grid.ColumnSpan="3" Background="#0F1A2D" BorderBrush="#1F2E45" BorderThickness="0,0,0,1">
-            <Grid Margin="14,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+        <!-- Icon Sidebar -->
+        <Border Grid.Column="0" Background="#07111F" BorderBrush="#0F2035" BorderThickness="0,0,1,0">
+            <DockPanel>
+                <!-- Logo -->
+                <Border DockPanel.Dock="Top" Height="56" Margin="0,0,0,4">
+                    <Border Width="38" Height="38" CornerRadius="9" Background="#00C48C"
+                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="V" FontSize="19" FontWeight="Black" Foreground="#061018"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                </Border>
 
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="VMS" FontSize="21" FontWeight="Bold" Foreground="#12B886" Margin="0,0,18,0" />
-                    <Button Content="Live View" Width="120" Height="34" Margin="0,0,8,0" Command="{Binding SwitchModuleCommand}" CommandParameter="LiveView" />
-                    <ComboBox Width="150" Height="34" Margin="0,0,8,0"
+                <!-- Nav buttons -->
+                <StackPanel DockPanel.Dock="Top" Margin="4,0,4,0">
+
+                    <Button Style="{StaticResource NavItemButtonStyle}"
+                            Command="{Binding SwitchModuleCommand}" CommandParameter="LiveView">
+                        <Button.Tag>
+                            <Binding Path="ActiveModule" Converter="{StaticResource ModuleToAccentConverter}" ConverterParameter="LiveView" />
+                        </Button.Tag>
+                        <StackPanel>
+                            <Viewbox Width="20" Height="20" HorizontalAlignment="Center" Margin="0,0,0,4">
+                                <Canvas Width="24" Height="24">
+                                    <Rectangle Canvas.Left="2" Canvas.Top="3"  Width="9" Height="7" Fill="{Binding Tag, RelativeSource={RelativeSource AncestorType=Button}}" RadiusX="1" RadiusY="1"/>
+                                    <Rectangle Canvas.Left="13" Canvas.Top="3"  Width="9" Height="7" Fill="{Binding Tag, RelativeSource={RelativeSource AncestorType=Button}}" RadiusX="1" RadiusY="1"/>
+                                    <Rectangle Canvas.Left="2" Canvas.Top="12" Width="9" Height="7" Fill="{Binding Tag, RelativeSource={RelativeSource AncestorType=Button}}" RadiusX="1" RadiusY="1"/>
+                                    <Rectangle Canvas.Left="13" Canvas.Top="12" Width="9" Height="7" Fill="{Binding Tag, RelativeSource={RelativeSource AncestorType=Button}}" RadiusX="1" RadiusY="1"/>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="Live" FontSize="9" HorizontalAlignment="Center"
+                                       Foreground="{Binding Tag, RelativeSource={RelativeSource AncestorType=Button}}" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource NavItemButtonStyle}"
+                            Command="{Binding SwitchModuleCommand}" CommandParameter="Playback">
+                        <Button.Tag>
+                            <Binding Path="ActiveModule" Converter="{StaticResource ModuleToAccentConverter}" ConverterParameter="Playback" />
+                        </Button.Tag>
+                        <StackPanel>
+                            <Viewbox Width="20" Height="20" HorizontalAlignment="Center" Margin="0,0,0,4">
+                                <Canvas Width="24" Height="24">
+                                    <Polygon Points="7,4 20,12 7,20" Fill="{Binding Tag, RelativeSource={RelativeSource AncestorType=Button}}" />
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="Play" FontSize="9" HorizontalAlignment="Center"
+                                       Foreground="{Binding Tag, RelativeSource={RelativeSource AncestorType=Button}}" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource NavItemButtonStyle}"
+                            Command="{Binding SwitchModuleCommand}" CommandParameter="DeviceManager">
+                        <Button.Tag>
+                            <Binding Path="ActiveModule" Converter="{StaticResource ModuleToAccentConverter}" ConverterParameter="DeviceManager" />
+                        </Button.Tag>
+                        <StackPanel>
+                            <Viewbox Width="20" Height="20" HorizontalAlignment="Center" Margin="0,0,0,4">
+                                <Canvas Width="24" Height="24">
+                                    <Ellipse Canvas.Left="8" Canvas.Top="2" Width="8" Height="8"
+                                             Stroke="{Binding Tag, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.8" Fill="Transparent"/>
+                                    <Path Data="M4,22 Q4,15 12,15 Q20,15 20,22"
+                                          Stroke="{Binding Tag, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.8" Fill="Transparent"/>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="Devices" FontSize="9" HorizontalAlignment="Center"
+                                       Foreground="{Binding Tag, RelativeSource={RelativeSource AncestorType=Button}}" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource NavItemButtonStyle}"
+                            Command="{Binding SwitchModuleCommand}" CommandParameter="Settings">
+                        <Button.Tag>
+                            <Binding Path="ActiveModule" Converter="{StaticResource ModuleToAccentConverter}" ConverterParameter="Settings" />
+                        </Button.Tag>
+                        <StackPanel>
+                            <Viewbox Width="20" Height="20" HorizontalAlignment="Center" Margin="0,0,0,4">
+                                <Canvas Width="24" Height="24">
+                                    <Ellipse Canvas.Left="9" Canvas.Top="9" Width="6" Height="6"
+                                             Stroke="{Binding Tag, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.8" Fill="Transparent"/>
+                                    <Path Data="M12,2 L12,5 M12,19 L12,22 M2,12 L5,12 M19,12 L22,12 M4.9,4.9 L7,7 M17,17 L19.1,19.1 M19.1,4.9 L17,7 M7,17 L4.9,19.1"
+                                          Stroke="{Binding Tag, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.8"/>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="Settings" FontSize="9" HorizontalAlignment="Center"
+                                       Foreground="{Binding Tag, RelativeSource={RelativeSource AncestorType=Button}}" />
+                        </StackPanel>
+                    </Button>
+
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Camera Tree -->
+        <Grid Grid.Column="1" Background="#07111F">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Tree Header -->
+            <Border Background="#07111F" BorderBrush="#0F2035" BorderThickness="0,0,0,1" Padding="14,12">
+                <Grid>
+                    <TextBlock Text="CAMERAS" FontSize="10" FontWeight="Bold" Foreground="#4A6880"
+                               VerticalAlignment="Center" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Style="{StaticResource GhostButtonStyle}" Content="＋" Width="26" Height="26"
+                                ToolTip="Add Device" Click="AddButton_OnTreeClick" />
+                        <Button Style="{StaticResource GhostButtonStyle}" Content="⟳" Width="26" Height="26"
+                                ToolTip="Discover" Click="DiscoverButton_OnTreeClick" Margin="4,0,0,0" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <modules:DeviceTreeControl Grid.Row="1" DataContext="{Binding DeviceTree}" />
+
+            <!-- Workspace Bar -->
+            <Border Grid.Row="2" Background="#060E1A" BorderBrush="#0F2035" BorderThickness="0,1,0,0" Padding="10,8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ComboBox Grid.Column="0" Height="28"
                               ItemsSource="{Binding LiveWorkspaces}"
                               DisplayMemberPath="Name"
-                              SelectedItem="{Binding SelectedLiveWorkspace}" />
-                    <Button Content="+ New Live" Width="110" Height="34" Margin="0,0,8,0" Command="{Binding CreateLiveWorkspaceCommand}" />
-                    <Button Content="Remove" Width="90" Height="34" Margin="0,0,8,0" Command="{Binding RemoveLiveWorkspaceCommand}" />
-                    <Button Content="Detach Live View" Width="140" Height="34" Margin="0,0,8,0" Click="DetachLiveView_OnClick" />
-                    <Button Content="Playback" Width="120" Height="34" Margin="0,0,8,0" Command="{Binding SwitchModuleCommand}" CommandParameter="Playback" />
-                    <Button Content="Device Manager" Width="140" Height="34" Margin="0,0,8,0" Command="{Binding SwitchModuleCommand}" CommandParameter="DeviceManager" />
-                    <Button Content="Settings" Width="110" Height="34" Command="{Binding SwitchModuleCommand}" CommandParameter="Settings" />
-                </StackPanel>
+                              SelectedItem="{Binding SelectedLiveWorkspace}"
+                              VerticalAlignment="Center" />
+                    <Button Grid.Column="1" Style="{StaticResource GhostButtonStyle}" Content="＋" Width="28" Height="28"
+                            Margin="4,0,0,0" ToolTip="New workspace" Command="{Binding CreateLiveWorkspaceCommand}" />
+                    <Button Grid.Column="2" Style="{StaticResource GhostButtonStyle}" Content="✕" Width="28" Height="28"
+                            Margin="2,0,0,0" ToolTip="Remove workspace" Command="{Binding RemoveLiveWorkspaceCommand}" />
+                </Grid>
+            </Border>
+        </Grid>
 
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding SystemStatusText}" Foreground="#A2BAD8" VerticalAlignment="Center" />
-                </StackPanel>
+        <!-- Main Content -->
+        <Grid Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="42" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Top Bar -->
+            <Border Background="#07111F" BorderBrush="#0F2035" BorderThickness="0,0,0,1" Padding="14,0">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding ActiveModuleTitle}" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="#C8DDEF" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Ellipse Width="7" Height="7" Fill="#00C48C" Margin="0,0,6,0" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding SystemStatusText}" Foreground="#4A6880" FontSize="11"
+                                   VerticalAlignment="Center" />
+                        <Button Content="⤢ Detach" Style="{StaticResource GhostButtonStyle}" Height="26"
+                                Padding="8,0" Margin="16,0,0,0" Click="DetachLiveView_OnClick" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- All module controls pre-instantiated — no destroy/recreate on page switch -->
+            <Grid Grid.Row="1">
+                <modules:LiveViewControl    x:Name="LiveViewPage"      DataContext="{Binding LiveView}" />
+                <modules:PlaybackControl    x:Name="PlaybackPage"      DataContext="{Binding Playback}"       Visibility="Collapsed" Opacity="0" />
+                <modules:DeviceManagerControl x:Name="DeviceManagerPage" DataContext="{Binding DeviceManager}" Visibility="Collapsed" Opacity="0" />
+                <modules:SettingsControl    x:Name="SettingsPage"      DataContext="{Binding Settings}"      Visibility="Collapsed" Opacity="0" />
             </Grid>
-        </Border>
+        </Grid>
 
-        <Border Grid.Row="1" Grid.Column="0" Margin="8" Background="#101826" BorderBrush="#24334A" BorderThickness="1" CornerRadius="6">
-            <modules:DeviceTreeControl DataContext="{Binding DeviceTree}" />
-        </Border>
+        <!-- Inspector Panel -->
+        <Border Grid.Column="3" Background="#07111F" BorderBrush="#0F2035" BorderThickness="1,0,0,0">
+            <Grid Margin="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
 
-        <Border Grid.Row="1" Grid.Column="1" Margin="0,8,0,8" Background="#0C1424" BorderBrush="#24334A" BorderThickness="1" CornerRadius="6">
-            <ContentControl Content="{Binding CurrentModuleViewModel}" />
-        </Border>
+                <Border BorderBrush="#0F2035" BorderThickness="0,0,0,1" Padding="14,12">
+                    <TextBlock Text="INSPECTOR" FontSize="10" FontWeight="Bold" Foreground="#4A6880" />
+                </Border>
 
-        <Border Grid.Row="1" Grid.Column="2" Margin="8" Background="#101826" BorderBrush="#24334A" BorderThickness="1" CornerRadius="6" Padding="12">
-            <StackPanel>
-                <TextBlock Text="Stream Inspector" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,12" />
-                <TextBlock Text="Camera" Foreground="#9BB1CC" FontSize="11" />
-                <TextBlock Text="{Binding SelectedCameraName}" Margin="0,0,0,10" />
-                <TextBlock Text="Status" Foreground="#9BB1CC" FontSize="11" />
-                <TextBlock Text="{Binding SelectedCameraStatus}" Margin="0,0,0,10" />
-                <TextBlock Text="Bitrate" Foreground="#9BB1CC" FontSize="11" />
-                <TextBlock Text="{Binding SelectedCameraBitrate}" Margin="0,0,0,10" />
-                <TextBlock Text="Resolution" Foreground="#9BB1CC" FontSize="11" />
-                <TextBlock Text="{Binding SelectedCameraResolution}" Margin="0,0,0,10" />
-                <TextBlock Text="FPS" Foreground="#9BB1CC" FontSize="11" />
-                <TextBlock Text="{Binding SelectedCameraFps}" />
-            </StackPanel>
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="14,14,14,14">
+                        <TextBlock Text="SELECTED CAMERA" FontSize="9" FontWeight="Bold" Foreground="#2E4A63"
+                                   Margin="0,0,0,10" />
+
+                        <TextBlock Text="Name" Style="{StaticResource InspectorLabelStyle}" />
+                        <TextBlock Text="{Binding SelectedCameraName}" Style="{StaticResource InspectorValueStyle}" />
+
+                        <TextBlock Text="Status" Style="{StaticResource InspectorLabelStyle}" />
+                        <TextBlock Text="{Binding SelectedCameraStatus}" Style="{StaticResource InspectorValueStyle}" />
+
+                        <TextBlock Text="Bitrate" Style="{StaticResource InspectorLabelStyle}" />
+                        <TextBlock Text="{Binding SelectedCameraBitrate}" Style="{StaticResource InspectorValueStyle}" />
+
+                        <TextBlock Text="Resolution" Style="{StaticResource InspectorLabelStyle}" />
+                        <TextBlock Text="{Binding SelectedCameraResolution}" Style="{StaticResource InspectorValueStyle}" />
+
+                        <TextBlock Text="FPS" Style="{StaticResource InspectorLabelStyle}" />
+                        <TextBlock Text="{Binding SelectedCameraFps}" Style="{StaticResource InspectorValueStyle}" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
         </Border>
     </Grid>
 </Window>
+
+
+

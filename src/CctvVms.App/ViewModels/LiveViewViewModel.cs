@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Threading;
 using CctvVms.App.Infrastructure;
@@ -18,6 +18,7 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
     private VideoTileViewModel? _selectedTile;
     private bool _isZoomedIn;
     private VideoTileViewModel? _zoomedTile;
+    private CancellationTokenSource _zoomCts = new();
 
     public LiveViewViewModel(IStreamEngine streamEngine, DeviceTreeViewModel deviceTree, bool ownsStreamEngine = false)
     {
@@ -361,19 +362,19 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
     private async Task ZoomTileAsync(object? parameter)
     {
         if (parameter is not VideoTileViewModel tile || string.IsNullOrWhiteSpace(tile.CameraId))
-        {
             return;
-        }
 
         var camera = _deviceTree.FindCamera(tile.CameraId);
-        if (camera is null)
-        {
-            return;
-        }
+        if (camera is null) return;
+
+        var prevCts = _zoomCts;
+        _zoomCts = new CancellationTokenSource();
+        var ct = _zoomCts.Token;
+        try { prevCts.Cancel(); } catch { }
 
         _zoomedTile = tile;
-        IsZoomedIn = true;
 
+        // Show the overlay immediately with "Connecting…" so the user gets instant feedback.
         ZoomTiles.Clear();
         var zoomedTile = new VideoTileViewModel
         {
@@ -381,82 +382,69 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
             CameraId = tile.CameraId,
             CameraName = tile.CameraName,
             CameraStatus = tile.CameraStatus,
-            Row = 0,
-            Column = 0,
-            RowSpan = 1,
-            ColumnSpan = 1
+            Row = 0, Column = 0, RowSpan = 1, ColumnSpan = 1,
+            StreamType = StreamType.Main,
+            IsDeploying = true
         };
-
-        // Show zoom immediately with current player so double-click always responds.
-        zoomedTile.MediaPlayer = tile.MediaPlayer;
-        zoomedTile.StreamType = tile.StreamType;
         ZoomTiles.Add(zoomedTile);
-
+        IsZoomedIn = true;
         await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
+
+        if (ct.IsCancellationRequested) return;
 
         try
         {
-            var mainStream = await _streamEngine.SwitchStreamAsync(camera, StreamType.Main);
+            // Stop sub-stream, start main-stream RTSP connection.
+            // StopStreamAsync runs Player.Stop() inside Task.Run so the UI stays responsive.
+            var mainStream = await _streamEngine.SwitchStreamAsync(camera, StreamType.Main, ct);
+            if (ct.IsCancellationRequested) return;
+
+            // HWND already exists (overlay has been Visible since IsZoomedIn = true).
+            // Assign player → VideoView calls SetHwnd → VLC renders to the overlay.
             zoomedTile.MediaPlayer = mainStream.MediaPlayer;
-            zoomedTile.StreamType = mainStream.StreamType;
             await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
-            await _streamEngine.BeginPlayAsync(camera.Id);
+            await _streamEngine.BeginPlayAsync(camera.Id, ct);
+            zoomedTile.IsDeploying = false;
         }
+        catch (OperationCanceledException) { }
         catch
         {
-            // Keep current stream in zoom if main-stream switch fails under load.
-        }
-
-        foreach (var other in Tiles.Where(t => t.TileId != tile.TileId && !string.IsNullOrWhiteSpace(t.CameraId)))
-        {
-            var otherCamera = _deviceTree.FindCamera(other.CameraId);
-            if (otherCamera is not null)
-            {
-                try
-                {
-                    var subStream = await _streamEngine.SwitchStreamAsync(otherCamera, StreamType.Sub);
-                    other.MediaPlayer = subStream.MediaPlayer;
-                    other.StreamType = subStream.StreamType;
-                    await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
-                    await _streamEngine.BeginPlayAsync(otherCamera.Id);
-                }
-                catch
-                {
-                    // Best effort only; keep existing stream if downgrade fails.
-                }
-            }
+            zoomedTile.IsDeploying = false;
         }
     }
 
     private async Task ExitZoomAsync()
     {
+        try { _zoomCts.Cancel(); } catch { }
+
         var tileToRestore = _zoomedTile;
-        IsZoomedIn = false;
-        ZoomTiles.Clear();
         _zoomedTile = null;
 
+        // Close overlay immediately — grid reappears, zoomed tile shows "Connecting…"
+        // while the sub-stream reconnects.
+        IsZoomedIn = false;
+        ZoomTiles.Clear();
+
         if (tileToRestore is null || string.IsNullOrWhiteSpace(tileToRestore.CameraId))
-        {
             return;
-        }
 
         var camera = _deviceTree.FindCamera(tileToRestore.CameraId);
-        if (camera is null)
-        {
-            return;
-        }
+        if (camera is null) return;
+
+        tileToRestore.IsDeploying = true;
+        tileToRestore.MediaPlayer = null;
 
         try
         {
             var subStream = await _streamEngine.SwitchStreamAsync(camera, StreamType.Sub);
             tileToRestore.MediaPlayer = subStream.MediaPlayer;
-            tileToRestore.StreamType = subStream.StreamType;
             await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
             await _streamEngine.BeginPlayAsync(camera.Id);
+            tileToRestore.IsDeploying = false;
         }
         catch
         {
-            // Best effort; keep current player state if switch fails.
+            tileToRestore.IsDeploying = false;
         }
     }
 
@@ -468,6 +456,38 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
         tile.CameraStatus = DeviceStatus.Unknown;
         tile.StreamType = StreamType.Sub;
         tile.IsDeploying = false;
+    }
+
+    public async Task PopulateFromDeviceAsync(DeviceTreeNodeViewModel deviceNode)
+    {
+        var cameras = deviceNode.Children
+            .Where(c => !c.IsDeviceNode && c.Camera is not null)
+            .Select(c => c.Camera!)
+            .ToList();
+
+        if (cameras.Count == 0) return;
+
+        // Pick the smallest layout that fits all cameras.
+        var layout = cameras.Count switch
+        {
+            1         => "1x1",
+            <= 4      => "2x2",
+            <= 9      => "3x3",
+            _         => "4x4"
+        };
+
+        await ApplyLayoutAsync(layout);
+
+        // Assign cameras to tiles sequentially up to the tile count.
+        var tileCount = Math.Min(cameras.Count, Tiles.Count);
+        var tasks = new List<Task>();
+        for (var i = 0; i < tileCount; i++)
+        {
+            var tile = Tiles[i];
+            var camera = cameras[i];
+            tasks.Add(AssignCameraToTileAsync(tile.TileId, camera.Id));
+        }
+        await Task.WhenAll(tasks);
     }
 
     public void Dispose()
@@ -485,3 +505,8 @@ public sealed class LiveViewWorkspaceState
     public string Layout { get; set; } = "2x2";
     public List<string> CameraIds { get; set; } = new();
 }
+
+
+
+
+

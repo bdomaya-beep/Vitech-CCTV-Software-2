@@ -5,25 +5,35 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vlc="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"
              mc:Ignorable="d">
-    <Grid>
+    <Grid Background="#080E18">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="40" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Orientation="Horizontal" Margin="12,12,12,8">
-            <Button Content="1x1" Width="56" Margin="0,0,6,0" Command="{Binding SetLayoutCommand}" CommandParameter="1x1" />
-            <Button Content="2x2" Width="56" Margin="0,0,6,0" Command="{Binding SetLayoutCommand}" CommandParameter="2x2" />
-            <Button Content="3x3" Width="56" Margin="0,0,6,0" Command="{Binding SetLayoutCommand}" CommandParameter="3x3" />
-            <Button Content="4x4" Width="56" Margin="0,0,6,0" Command="{Binding SetLayoutCommand}" CommandParameter="4x4" />
-            <TextBlock VerticalAlignment="Center" Margin="14,0,0,0" Foreground="#8FA9CA" Text="Drag cameras from left panel into any tile" />
-        </StackPanel>
+        <!-- Toolbar -->
+        <Border Background="#07111F" BorderBrush="#0F2035" BorderThickness="0,0,0,1" Padding="10,0">
+            <DockPanel VerticalAlignment="Center">
+                <!-- Layout buttons -->
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                    <TextBlock Text="LAYOUT" FontSize="9" FontWeight="Bold" Foreground="#2E4A63"
+                               VerticalAlignment="Center" Margin="0,0,10,0" />
+                    <Button Content="1×1" Style="{StaticResource LayoutButtonStyle}" Command="{Binding SetLayoutCommand}" CommandParameter="1x1" Margin="0,0,3,0" />
+                    <Button Content="2×2" Style="{StaticResource LayoutButtonStyle}" Command="{Binding SetLayoutCommand}" CommandParameter="2x2" Margin="0,0,3,0" />
+                    <Button Content="3×3" Style="{StaticResource LayoutButtonStyle}" Command="{Binding SetLayoutCommand}" CommandParameter="3x3" Margin="0,0,3,0" />
+                    <Button Content="4×4" Style="{StaticResource LayoutButtonStyle}" Command="{Binding SetLayoutCommand}" CommandParameter="4x4" />
+                </StackPanel>
+                <TextBlock DockPanel.Dock="Right" Text="Double-click a tile to expand" FontSize="11"
+                           Foreground="#2E4A63" VerticalAlignment="Center" HorizontalAlignment="Right" />
+            </DockPanel>
+        </Border>
 
+        <!-- Grid view -->
         <ItemsControl x:Name="TilesItemsControl"
-              Grid.Row="1"
-              ItemsSource="{Binding Tiles}"
-              Margin="12,0,12,12"
-              Visibility="{Binding IsZoomedIn, Converter={StaticResource BoolToInverseVisibilityConverter}}">
+                      Grid.Row="1"
+                      ItemsSource="{Binding Tiles}"
+                      Margin="6"
+                      >
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <UniformGrid Rows="{Binding Rows}" Columns="{Binding Columns}" />
@@ -32,64 +42,146 @@
 
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <Border Margin="3" BorderBrush="#2A3B55" BorderThickness="1" CornerRadius="4" Background="#0B1321" AllowDrop="True" Drop="Tile_OnDrop" PreviewMouseLeftButtonDown="Tile_OnPreviewMouseLeftButtonDown" MouseLeftButtonDown="Tile_OnMouseLeftButtonDown">
-                        <Grid Tag="{Binding TileId}">
+                    <Border Margin="3" BorderBrush="#0F2035" BorderThickness="1" CornerRadius="3"
+                            Background="#060C18"
+                            AllowDrop="True"
+                            Drop="Tile_OnDrop"
+                            PreviewMouseLeftButtonDown="Tile_OnPreviewMouseLeftButtonDown"
+                            MouseLeftButtonDown="Tile_OnMouseLeftButtonDown">
+                        <Grid Tag="{Binding TileId}" ClipToBounds="True">
+
+                            <!-- Video -->
+                            <!-- DataTrigger forces Hidden (not Collapsed) when zoomed in so the Win32 HWND
+                                 is not painted over the overlay, while still keeping the stream alive. -->
                             <vlc:VideoView x:Name="TileVideo"
                                            MediaPlayer="{Binding MediaPlayer}"
-                                           Visibility="{Binding CameraId, Converter={StaticResource StringToVisibilityConverter}}"
-                                           IsHitTestVisible="False" />
-                            <Border x:Name="EmptyOverlay" Background="#1E2A3A" Visibility="{Binding CameraId, Converter={StaticResource StringToInverseVisibilityConverter}}">
-                                <TextBlock Text="Drop Camera" Foreground="#7F97B8" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                           IsHitTestVisible="False">
+                                <vlc:VideoView.Style>
+                                    <Style TargetType="vlc:VideoView">
+                                        <Setter Property="Visibility"
+                                                Value="{Binding CameraId, Converter={StaticResource StringToVisibilityConverter}}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding DataContext.IsZoomedIn,
+                                                         RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                         Value="True">
+                                                <Setter Property="Visibility" Value="Hidden" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </vlc:VideoView.Style>
+                            </vlc:VideoView>
+
+                            <!-- Empty state -->
+                            <Grid Visibility="{Binding CameraId, Converter={StaticResource StringToInverseVisibilityConverter}}">
+                                <Border Background="#060C18" />
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Border Width="32" Height="32" CornerRadius="16" Background="#0C1A2A"
+                                            HorizontalAlignment="Center" Margin="0,0,0,8">
+                                        <TextBlock Text="+" FontSize="18" Foreground="#1A3050"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <TextBlock Text="Drop Camera" Foreground="#1A3050" FontSize="11"
+                                               HorizontalAlignment="Center" />
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Deploying overlay -->
+                            <Border Background="#CC060C18"
+                                    Visibility="{Binding IsDeploying, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Text="Connecting…" Foreground="#00C48C" FontSize="12"
+                                               FontWeight="SemiBold" HorizontalAlignment="Center" />
+                                </StackPanel>
                             </Border>
-                            <Border Background="#AA07111D" Visibility="{Binding IsDeploying, Converter={StaticResource BoolToVisibilityConverter}}">
-                                <TextBlock Text="Deploying stream..." Foreground="#9FD8C6" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="SemiBold" />
-                            </Border>
-                            <Border Background="#8808111D" Height="24" VerticalAlignment="Top">
-                                <DockPanel Margin="8,0">
-                                    <TextBlock Text="{Binding CameraName}" VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding StreamTypeText}" Margin="8,0,0,0" Foreground="#74D9BD" VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding CameraStatusText}" Margin="8,0,0,0" Foreground="#9BB1CC" VerticalAlignment="Center" />
+
+                            <!-- Top HUD: camera name + stream badge -->
+                            <Border VerticalAlignment="Top" HorizontalAlignment="Stretch" Height="24"
+                                    Visibility="{Binding CameraId, Converter={StaticResource StringToVisibilityConverter}}">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                        <GradientStop Color="#CC000000" Offset="0" />
+                                        <GradientStop Color="#00000000" Offset="1" />
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                                <DockPanel Margin="7,4,7,0">
+                                    <Border DockPanel.Dock="Right" CornerRadius="2"
+                                            Background="{Binding StreamType, Converter={StaticResource StreamTypeToBadgeBrushConverter}}"
+                                            Padding="5,1" Margin="4,0,0,0">
+                                        <TextBlock Text="{Binding StreamTypeText}" FontSize="9" FontWeight="Bold"
+                                                   Foreground="#080E18" VerticalAlignment="Center" />
+                                    </Border>
+                                    <TextBlock Text="{Binding CameraName}" FontSize="11" Foreground="#C8DDEF"
+                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                                 </DockPanel>
                             </Border>
-                            <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Right" Orientation="Horizontal" Margin="0,0,6,6">
-                                <Button Content="Focus" Width="56" Height="24" Margin="0,0,4,0" IsEnabled="{Binding IsDeploying, Converter={StaticResource BoolToInverseVisibilityConverter}}" Command="{Binding DataContext.FocusTileCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
-                                <Button Content="Clear" Width="56" Height="24" IsEnabled="{Binding IsDeploying, Converter={StaticResource BoolToInverseVisibilityConverter}}" Command="{Binding DataContext.ClearTileCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
-                            </StackPanel>
+
+                            <!-- Bottom HUD: action buttons -->
+                            <Border VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Height="32"
+                                    Visibility="{Binding CameraId, Converter={StaticResource StringToVisibilityConverter}}">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                        <GradientStop Color="#00000000" Offset="0" />
+                                        <GradientStop Color="#CC000000" Offset="1" />
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                                            VerticalAlignment="Center" Margin="0,0,6,0">
+                                    <Button Content="Focus" Style="{StaticResource TileActionButtonStyle}"
+                                            Command="{Binding DataContext.FocusTileCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                            CommandParameter="{Binding}" Margin="0,0,4,0" />
+                                    <Button Content="Clear" Style="{StaticResource TileActionButtonStyle}"
+                                            Command="{Binding DataContext.ClearTileCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                            CommandParameter="{Binding}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Hover ring -->
+                            <Border CornerRadius="3" BorderBrush="#00C48C" BorderThickness="1.5"
+                                    IsHitTestVisible="False" Opacity="0" x:Name="HoverRing" />
                         </Grid>
                     </Border>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-          <Grid Grid.Row="1"
-              Panel.ZIndex="20"
-              Background="#050A10CC"
+        <!-- Zoom / Expanded view -->
+        <Grid Grid.Row="1" Panel.ZIndex="20"
               Visibility="{Binding IsZoomedIn, Converter={StaticResource BoolToVisibilityConverter}}">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="12" Background="#111C2E">
-                <TextBlock Foreground="#9BB1CC" VerticalAlignment="Center" Margin="8,6,12,6" Text="Press Escape or click Exit to return to grid" />
-                <Button Content="Exit Zoom" Width="80" Margin="0,6,8,6" Command="{Binding ExitZoomCommand}" />
-            </StackPanel>
-
-            <ItemsControl Grid.Row="1" ItemsSource="{Binding ZoomTiles}">
+            <ItemsControl Grid.Row="0" ItemsSource="{Binding ZoomTiles}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <Grid />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
-
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border Margin="0" BorderBrush="#2A3B55" BorderThickness="0" Background="#0B1321">
+                        <Border Background="#000000">
                             <vlc:VideoView MediaPlayer="{Binding MediaPlayer}" />
                         </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
+
+            <!-- Exit bar -->
+            <Border Grid.Row="1" Background="#CC07111F" BorderBrush="#0F2035" BorderThickness="0,1,0,0"
+                    Height="40" Padding="14,0">
+                <DockPanel VerticalAlignment="Center">
+                    <Button DockPanel.Dock="Right" Content="↩  Back to Grid"
+                            Style="{StaticResource AccentButtonStyle}"
+                            Height="28" Padding="12,0"
+                            Command="{Binding ExitZoomCommand}" />
+                    <TextBlock Text="EXPANDED VIEW" FontSize="10" FontWeight="Bold" Foreground="#2E4A63"
+                               VerticalAlignment="Center" />
+                </DockPanel>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>
+
+
+

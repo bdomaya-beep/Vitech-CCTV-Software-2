@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using CctvVms.Core.Contracts;
 using CctvVms.Core.Domain;
 using LibVLCSharp.Shared;
@@ -102,8 +102,14 @@ public sealed class StreamEngine : IStreamEngine, IDisposable
         {
             if (_sessions.TryRemove(cameraId, out var session))
             {
-                session.Dispose();
-                _pool.Release(cameraId);
+                // player.Stop() is a blocking native VLC call (waits for decoder/network threads
+                // to flush). Run it on the thread pool so it never blocks the UI thread,
+                // regardless of whether WaitAsync completed synchronously.
+                await Task.Run(() =>
+                {
+                    session.Dispose();       // Player.Stop()
+                    _pool.Release(cameraId); // Player.Stop() again + return to pool
+                }, cancellationToken);
             }
         }
         finally

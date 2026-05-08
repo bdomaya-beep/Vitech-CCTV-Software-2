@@ -4,16 +4,16 @@
 winexe
 C#
 .cs
-c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.App\obj\Debug\net6.0-windows\win-x64\
+C:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.App\obj\Debug\net6.0-windows\win-x64\
 CctvVms.App
 none
 false
 TRACE;DEBUG;NET;NET6_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
-c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.App\App.xaml
+C:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.App\App.xaml
 8-1841183175
 1262-884074329
-251202169508
-2041750471571
+261711052990
+204158222007
 MainWindow.xaml;Views\Dialogs\AddNvrDialog.xaml;Views\Dialogs\DiscoverRangeDialog.xaml;Views\Modules\DeviceManagerControl.xaml;Views\Modules\DeviceTreeControl.xaml;Views\Modules\LiveViewControl.xaml;Views\Modules\PlaybackControl.xaml;Views\Modules\SettingsControl.xaml;
 
 False
