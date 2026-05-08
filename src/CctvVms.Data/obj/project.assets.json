@@ -403,19 +403,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Vitech\\.nuget\\packages\\": {}
+    "C:\\Users\\User\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Vitech\\Practice\\CCTV Software System\\src\\CctvVms.Data\\CctvVms.Data.csproj",
+      "projectUniqueName": "c:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.Data\\CctvVms.Data.csproj",
       "projectName": "CctvVms.Data",
-      "projectPath": "C:\\Users\\Vitech\\Practice\\CCTV Software System\\src\\CctvVms.Data\\CctvVms.Data.csproj",
-      "packagesPath": "C:\\Users\\Vitech\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Vitech\\Practice\\CCTV Software System\\src\\CctvVms.Data\\obj\\",
+      "projectPath": "c:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.Data\\CctvVms.Data.csproj",
+      "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
+      "outputPath": "c:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.Data\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Vitech\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\User\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net6.0"
@@ -427,8 +427,8 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "projectReferences": {
-            "C:\\Users\\Vitech\\Practice\\CCTV Software System\\src\\CctvVms.Core\\CctvVms.Core.csproj": {
-              "projectPath": "C:\\Users\\Vitech\\Practice\\CCTV Software System\\src\\CctvVms.Core\\CctvVms.Core.csproj"
+            "c:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.Core\\CctvVms.Core.csproj": {
+              "projectPath": "c:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.Core\\CctvVms.Core.csproj"
             }
           }
         }
@@ -443,7 +443,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "10.0.100"
+      "SdkAnalysisLevel": "10.0.200"
     },
     "frameworks": {
       "net6.0": {
@@ -484,7 +484,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.103\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.203\\RuntimeIdentifierGraph.json"
       }
     }
   }

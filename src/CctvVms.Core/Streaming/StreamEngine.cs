@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using CctvVms.Core.Contracts;
 using CctvVms.Core.Domain;
 using LibVLCSharp.Shared;
@@ -86,8 +86,7 @@ public sealed class StreamEngine : IStreamEngine, IDisposable
     {
         if (_sessions.TryGetValue(cameraId, out var session))
         {
-            var media = new Media(_libVlc, session.SourceUrl, FromType.FromLocation);
-            session.Player.Play(media);
+            var media = new Media(_libVlc, session.SourceUrl, FromType.FromLocation);            session.Player.Play(media);
             // media ref will be cleaned up by VLC internally after it starts loading
             session.LastHeartbeatUtc = DateTime.UtcNow;
         }

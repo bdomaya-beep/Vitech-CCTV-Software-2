@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Threading;
 using CctvVms.App.Infrastructure;
@@ -34,7 +34,7 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
         FocusTileCommand = new AsyncRelayCommand(FocusTileAsync);
         ClearTileCommand = new AsyncRelayCommand(ClearTileAsync);
         ZoomTileCommand = new AsyncRelayCommand(ZoomTileAsync);
-        ExitZoomCommand = new RelayCommand(ExitZoom);
+        ExitZoomCommand = new AsyncRelayCommand(ExitZoomAsync);
     }
 
     public ObservableCollection<VideoTileViewModel> Tiles { get; } = new();
@@ -57,6 +57,7 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
         get => _isZoomedIn;
         set => SetProperty(ref _isZoomedIn, value);
     }
+
 
     public VideoTileViewModel? SelectedTile
     {
@@ -147,7 +148,9 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
         }
     }
 
-    public void BeginAssignCameraToTile(string tileId, string cameraId)
+    public void BeginZoomTile(VideoTileViewModel tile) => _ = ZoomTileAsync(tile);
+
+        public void BeginAssignCameraToTile(string tileId, string cameraId)
     {
         _ = AssignCameraToTileAsync(tileId, cameraId);
     }
@@ -208,8 +211,11 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
 
             try
             {
-                var streamType = ComputeAdaptiveStreamType(tile);
-                var stream = await Task.Run(async () => await _streamEngine.StartStreamAsync(camera, streamType));
+                var existing = _streamEngine.GetActiveStreams().FirstOrDefault(s => s.CameraId == camera.Id);
+                bool needsPlay = existing == null || existing.StreamType == StreamType.Main;
+                var stream = existing?.StreamType == StreamType.Main
+                    ? await Task.Run(async () => await _streamEngine.SwitchStreamAsync(camera, StreamType.Sub))
+                    : await Task.Run(async () => await _streamEngine.StartStreamAsync(camera, StreamType.Sub));
 
                 // Assign player to tile FIRST so VideoView binds its HWND, THEN start playback.
                 tile.MediaPlayer = stream.MediaPlayer;
@@ -218,7 +224,11 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
 
                 // Yield to the WPF render pass so VideoView has attached the HWND to the player.
                 await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
-                await _streamEngine.BeginPlayAsync(camera.Id);
+                // Only start playback for new sessions or when stopped; reusing an active sub-stream avoids restarting it.
+                if (needsPlay || !stream.MediaPlayer.IsPlaying)
+                {
+                    await _streamEngine.BeginPlayAsync(camera.Id);
+                }
             }
             catch
             {
@@ -343,15 +353,9 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
         ClearTileUi(tile);
     }
 
-    private StreamType ComputeAdaptiveStreamType(VideoTileViewModel tile)
+    private static StreamType ComputeAdaptiveStreamType(VideoTileViewModel tile)
     {
-        if (tile.IsFocused)
-        {
-            return StreamType.Main;
-        }
-
-        var areaWeight = tile.ColumnSpan * tile.RowSpan;
-        return areaWeight >= 4 ? StreamType.Main : StreamType.Sub;
+        return StreamType.Sub;
     }
 
     private async Task ZoomTileAsync(object? parameter)
@@ -424,11 +428,36 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
         }
     }
 
-    private void ExitZoom()
+    private async Task ExitZoomAsync()
     {
+        var tileToRestore = _zoomedTile;
         IsZoomedIn = false;
         ZoomTiles.Clear();
         _zoomedTile = null;
+
+        if (tileToRestore is null || string.IsNullOrWhiteSpace(tileToRestore.CameraId))
+        {
+            return;
+        }
+
+        var camera = _deviceTree.FindCamera(tileToRestore.CameraId);
+        if (camera is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var subStream = await _streamEngine.SwitchStreamAsync(camera, StreamType.Sub);
+            tileToRestore.MediaPlayer = subStream.MediaPlayer;
+            tileToRestore.StreamType = subStream.StreamType;
+            await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
+            await _streamEngine.BeginPlayAsync(camera.Id);
+        }
+        catch
+        {
+            // Best effort; keep current player state if switch fails.
+        }
     }
 
     private static void ClearTileUi(VideoTileViewModel tile)

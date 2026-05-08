@@ -159,16 +159,8 @@ public partial class App : Application
 		{
 			"--avcodec-hw=d3d11va",
 			"--rtsp-tcp",
-			"--network-caching=500",
-			"--file-caching=300",
-			"--clock-synchro=0",
-			"--no-ts-trust-pcr",
-			"--avcodec-skiploopfilter=all",  // skip in-loop deblocking filter on CPU
-			"--avcodec-skip-frame=nonref",    // only decode reference frames when lagging
-			"--avcodec-skip-idct=nonref",
-			"--drop-late-frames",
-			"--skip-frames"
-		};
+			"--network-caching=1000",
+                      "--live-caching=1000",			"--file-caching=1000",		};
 
 		try
 		{
@@ -177,7 +169,7 @@ public partial class App : Application
 		catch
 		{
 			// Fallback to baseline init when a platform-specific VLC option is unsupported.
-			try { return new LibVLC("--avcodec-hw=dxva2", "--rtsp-tcp", "--network-caching=500"); }
+			try { return new LibVLC("--avcodec-hw=dxva2", "--rtsp-tcp", "--network-caching=1000"); }
 			catch { return new LibVLC(); }
 		}
 	}

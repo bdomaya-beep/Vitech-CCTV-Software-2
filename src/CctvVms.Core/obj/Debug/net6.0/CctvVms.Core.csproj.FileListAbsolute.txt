@@ -10,3 +10,16 @@ C:\Users\Vitech\Practice\CCTV Software System\src\CctvVms.Core\obj\Debug\net6.0\
 C:\Users\Vitech\Practice\CCTV Software System\src\CctvVms.Core\obj\Debug\net6.0\refint\CctvVms.Core.dll
 C:\Users\Vitech\Practice\CCTV Software System\src\CctvVms.Core\obj\Debug\net6.0\CctvVms.Core.pdb
 C:\Users\Vitech\Practice\CCTV Software System\src\CctvVms.Core\obj\Debug\net6.0\ref\CctvVms.Core.dll
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Core\bin\Debug\net6.0\CctvVms.Core.deps.json
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Core\bin\Debug\net6.0\CctvVms.Core.dll
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Core\bin\Debug\net6.0\CctvVms.Core.pdb
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Core\obj\Debug\net6.0\CctvVms.Core.csproj.AssemblyReference.cache
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Core\obj\Debug\net6.0\CctvVms.Core.GeneratedMSBuildEditorConfig.editorconfig
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Core\obj\Debug\net6.0\CctvVms.Core.AssemblyInfoInputs.cache
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Core\obj\Debug\net6.0\CctvVms.Core.AssemblyInfo.cs
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Core\obj\Debug\net6.0\CctvVms.Core.csproj.CoreCompileInputs.cache
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Core\obj\Debug\net6.0\CctvVms.Core.sourcelink.json
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Core\obj\Debug\net6.0\CctvVms.Core.dll
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Core\obj\Debug\net6.0\refint\CctvVms.Core.dll
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Core\obj\Debug\net6.0\CctvVms.Core.pdb
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Core\obj\Debug\net6.0\ref\CctvVms.Core.dll

@@ -13,3 +13,19 @@ C:\Users\Vitech\Practice\CCTV Software System\src\CctvVms.Data\obj\Debug\net6.0\
 C:\Users\Vitech\Practice\CCTV Software System\src\CctvVms.Data\obj\Debug\net6.0\refint\CctvVms.Data.dll
 C:\Users\Vitech\Practice\CCTV Software System\src\CctvVms.Data\obj\Debug\net6.0\CctvVms.Data.pdb
 C:\Users\Vitech\Practice\CCTV Software System\src\CctvVms.Data\obj\Debug\net6.0\ref\CctvVms.Data.dll
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Data\bin\Debug\net6.0\CctvVms.Data.deps.json
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Data\bin\Debug\net6.0\CctvVms.Data.dll
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Data\bin\Debug\net6.0\CctvVms.Data.pdb
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Data\bin\Debug\net6.0\CctvVms.Core.dll
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Data\bin\Debug\net6.0\CctvVms.Core.pdb
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Data\obj\Debug\net6.0\CctvVms.Data.csproj.AssemblyReference.cache
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Data\obj\Debug\net6.0\CctvVms.Data.GeneratedMSBuildEditorConfig.editorconfig
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Data\obj\Debug\net6.0\CctvVms.Data.AssemblyInfoInputs.cache
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Data\obj\Debug\net6.0\CctvVms.Data.AssemblyInfo.cs
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Data\obj\Debug\net6.0\CctvVms.Data.csproj.CoreCompileInputs.cache
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Data\obj\Debug\net6.0\CctvVms.Data.sourcelink.json
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Data\obj\Debug\net6.0\CctvVms..41B258FA.Up2Date
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Data\obj\Debug\net6.0\CctvVms.Data.dll
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Data\obj\Debug\net6.0\refint\CctvVms.Data.dll
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Data\obj\Debug\net6.0\CctvVms.Data.pdb
+c:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.Data\obj\Debug\net6.0\ref\CctvVms.Data.dll
