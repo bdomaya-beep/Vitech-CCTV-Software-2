@@ -40,6 +40,8 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<VideoTileViewModel> Tiles { get; } = new();
     public ObservableCollection<VideoTileViewModel> ZoomTiles { get; } = new();
+    internal IStreamEngine StreamEngine => _streamEngine;
+
 
     public int Rows
     {
@@ -259,7 +261,7 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
         }
     }
 
-    private async Task ApplyLayoutAsync(string layout)
+    internal async Task ApplyLayoutAsync(string layout)
     {
         var activeCameraIds = Tiles
             .Where(t => !string.IsNullOrWhiteSpace(t.CameraId))
@@ -490,6 +492,75 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
         await Task.WhenAll(tasks);
     }
 
+    public void SeedTileMetadata(IReadOnlyList<VideoTileViewModel> sourceTiles)
+    {
+        for (var i = 0; i < Math.Min(Tiles.Count, sourceTiles.Count); i++)
+        {
+            var src = sourceTiles[i];
+            var dst = Tiles[i];
+            dst.CameraId     = src.CameraId;
+            dst.CameraName   = src.CameraName;
+            dst.CameraStatus = src.CameraStatus;
+            dst.StreamType   = src.StreamType;
+        }
+    }
+
+    public async Task RebindFromEngineAsync()
+    {
+        foreach (var tile in Tiles.Where(t => !string.IsNullOrWhiteSpace(t.CameraId) && t.MediaPlayer is null))
+        {
+            var stream = _streamEngine.GetActiveStreams().FirstOrDefault(s => s.CameraId == tile.CameraId);
+            if (stream?.MediaPlayer is null) continue;
+            tile.MediaPlayer = stream.MediaPlayer;
+            await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
+        }
+    }
+
+
+    // Phase 1 (parallel, off UI): acquire all stream sessions concurrently.
+    // Phase 2 (single UI dispatch): assign all MediaPlayers at once.
+    // Phase 3 (one render pass): let VideoView ForegroundWindow set all HWNDs.
+    // Phase 4 (parallel, off UI): begin playback for all streams at once.
+    // This replaces 16x individual dispatches + 16x render passes with 2 total.
+    public async Task StartAllCameraStreamsAsync()
+    {
+        var activeTiles = Tiles.Where(t => !string.IsNullOrWhiteSpace(t.CameraId)).ToList();
+        if (activeTiles.Count == 0) return;
+
+        // Phase 1: acquire sessions in parallel on thread pool — pool.Acquire is in-memory,
+        // but forcing off UI thread prevents synchronous SemaphoreSlim completions from
+        // blocking the WPF message loop.
+        var results = await Task.WhenAll(activeTiles.Select(tile => Task.Run(async () =>
+        {
+            var camera = _deviceTree.FindCamera(tile.CameraId);
+            if (camera is null) return (tile: tile, info: (ActiveStreamInfo?)null);
+            try
+            {
+                var info = await _streamEngine.StartStreamAsync(camera, StreamType.Sub);
+                return (tile: tile, info: (ActiveStreamInfo?)info);
+            }
+            catch { return (tile: tile, info: (ActiveStreamInfo?)null); }
+        })));
+
+        // Phase 2: assign all MediaPlayers in a single UI dispatch.
+        await Application.Current.Dispatcher.InvokeAsync(() =>
+        {
+            foreach (var (tile, info) in results)
+            {
+                if (info is null) continue;
+                tile.MediaPlayer = info.MediaPlayer;
+                tile.StreamType  = info.StreamType;
+            }
+        });
+
+        // Phase 3: one render pass so VideoView.ForegroundWindow sets all HWNDs.
+        await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
+
+        // Phase 4: begin playback for all streams in parallel on thread pool.
+        await Task.WhenAll(results
+            .Where(r => r.Item2 is not null)
+            .Select(r => Task.Run(() => _streamEngine.BeginPlayAsync(r.Item1.CameraId))));
+    }
     public void Dispose()
     {
         if (_ownsStreamEngine && _streamEngine is IDisposable disposable)
@@ -505,8 +576,4 @@ public sealed class LiveViewWorkspaceState
     public string Layout { get; set; } = "2x2";
     public List<string> CameraIds { get; set; } = new();
 }
-
-
-
-
 

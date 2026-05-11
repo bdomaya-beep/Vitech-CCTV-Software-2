@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.IO;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
@@ -153,11 +153,8 @@ public partial class App : Application
 
 	private static LibVLC CreateLibVlc()
 	{
-		// d3d11va = Windows Direct3D 11 hardware decoder — required for HEVC streams.
-		// avcodec-hw=any is the fallback if d3d11va is unavailable on this GPU.
 		var stableOptions = new[]
 		{
-			"--avcodec-hw=d3d11va",
 			"--rtsp-tcp",
 			"--network-caching=1000",
                       "--live-caching=1000",			"--file-caching=1000",		};

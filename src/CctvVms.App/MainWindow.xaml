@@ -1,4 +1,4 @@
-﻿<Window x:Class="CctvVms.App.MainWindow"
+<Window x:Class="CctvVms.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -175,6 +175,8 @@
                                    VerticalAlignment="Center" />
                         <Button Content="⤢ Detach" Style="{StaticResource GhostButtonStyle}" Height="26"
                                 Padding="8,0" Margin="16,0,0,0" Click="DetachLiveView_OnClick" />
+                        <Button Content="+ New Live" Style="{StaticResource GhostButtonStyle}" Height="26"
+                                Padding="8,0" Margin="8,0,0,0" Click="NewLiveView_OnClick" />
                     </StackPanel>
                 </Grid>
             </Border>

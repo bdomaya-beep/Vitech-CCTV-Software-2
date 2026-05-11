@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
@@ -95,34 +95,109 @@ public partial class MainWindow : Window
     private async void DetachLiveView_OnClick(object sender, RoutedEventArgs e)
     {
         if (DataContext is not MainViewModel vm) return;
-
-        var detachedVm = await vm.CreateDetachedLiveViewAsync();
-
-        var layoutRoot = new Grid();
-        layoutRoot.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(300) });
-        layoutRoot.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-
-        var tree = new DeviceTreeControl { DataContext = vm.DeviceTree };
-        var live = new LiveViewControl { DataContext = detachedVm };
-
-        Grid.SetColumn(tree, 0);
-        Grid.SetColumn(live, 1);
-        layoutRoot.Children.Add(tree);
-        layoutRoot.Children.Add(live);
-
-        var window = new Window
+        try
         {
-            Title = "Detached Live View",
-            Width = 1500,
-            Height = 900,
-            MinWidth = 1000,
-            MinHeight = 700,
-            Content = layoutRoot,
-            Background = (System.Windows.Media.Brush?)FindResource("SurfaceBrush")
-        };
+            var detachedVm = await vm.CreateDetachedLiveViewAsync();
 
-        window.Closed += (_, _) => detachedVm.Dispose();
-        window.Show();
+            // Set MediaPlayer on detached tiles BEFORE the window is created/shown.
+            // At this point no VideoView exists yet, so VideoView.Attach() is a no-op.
+            // When window.Show() fires VideoView.Loaded → ForegroundWindow created →
+            // MediaPlayer != null → player.Hwnd = fgHwnd called inside Loaded handler.
+            // This avoids the race where ContentRendered fires before all 16
+            // ForegroundWindow instances have finished their own render passes.
+            vm.TransferPlayersToDetached(detachedVm);
+
+            var layoutRoot = new Grid();
+            layoutRoot.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(300) });
+            layoutRoot.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            var tree = new DeviceTreeControl { DataContext = vm.DeviceTree };
+            var live = new LiveViewControl { DataContext = detachedVm };
+
+            Grid.SetColumn(tree, 0);
+            Grid.SetColumn(live, 1);
+            layoutRoot.Children.Add(tree);
+            layoutRoot.Children.Add(live);
+
+            var window = new Window
+            {
+                Title = "Detached Live View",
+                Width = 1500,
+                Height = 900,
+                MinWidth = 1000,
+                MinHeight = 700,
+                Content = layoutRoot,
+                Background = (System.Windows.Media.Brush?)FindResource("SurfaceBrush")
+            };
+
+            window.Closed += async (_, _) =>
+            {
+                // window.Closed fires after all VideoView.Unloaded events which call
+                // Detach(player) → player.Hwnd = 0. RestoreAfterDetachAsync cycles
+                // main tiles null→player → Attach → player.Hwnd = mainFgHwnd.
+                await vm.RestoreAfterDetachAsync();
+                detachedVm.Dispose();
+            };
+
+            window.Show();
+            // VideoView.Loaded fires for each of the 16 tiles → ForegroundWindow.Show()
+            // → since MediaPlayer is already set, player.Hwnd = fgHwnd immediately.
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"DetachLiveView failed: {ex.Message}");
+        }
+    }
+
+    private async void NewLiveView_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainViewModel vm) return;
+        try
+        {
+            var newVm = await vm.CreateNewLiveWindowAsync();
+
+            var layoutRoot = new Grid();
+            layoutRoot.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(300) });
+            layoutRoot.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            var tree = new DeviceTreeControl { DataContext = vm.DeviceTree };
+            var live = new LiveViewControl { DataContext = newVm };
+
+            Grid.SetColumn(tree, 0);
+            Grid.SetColumn(live, 1);
+            layoutRoot.Children.Add(tree);
+            layoutRoot.Children.Add(live);
+
+            var window = new Window
+            {
+                Title = "New Live View",
+                Width = 1500,
+                Height = 900,
+                MinWidth = 1000,
+                MinHeight = 700,
+                Content = layoutRoot,
+                Background = (System.Windows.Media.Brush?)FindResource("SurfaceBrush")
+            };
+
+            window.ContentRendered += async (_, _) =>
+            {
+                // VideoView.Loaded has fired for all tiles; player.Hwnd is set.
+                // Now start playback on every camera in the independent engine.
+                await newVm.StartAllCameraStreamsAsync();
+            };
+
+            window.Closed += (_, _) =>
+            {
+                // Disposes the owned StreamEngine — stops all RTSP sessions for this window.
+                newVm.Dispose();
+            };
+
+            window.Show();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"NewLiveView failed: {ex.Message}");
+        }
     }
 
     protected override void OnClosed(EventArgs e)
