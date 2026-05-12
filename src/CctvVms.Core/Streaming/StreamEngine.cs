@@ -16,6 +16,13 @@ public sealed class StreamEngine : IStreamEngine, IDisposable
     private readonly CancellationTokenSource _cts = new();
     private readonly Task _monitorTask;
     private int _disposed;
+    private readonly SemaphoreSlim _reconnectGate = new SemaphoreSlim(3, 3);
+
+    private static readonly TimeSpan[] BackoffTable = new TimeSpan[]
+    {
+        TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(8),
+        TimeSpan.FromSeconds(16), TimeSpan.FromSeconds(32), TimeSpan.FromSeconds(60),
+    };
 
     public StreamEngine(LibVLC libVlc, IStreamPoolManager pool, StreamEngineOptions options)
     {
@@ -29,9 +36,7 @@ public sealed class StreamEngine : IStreamEngine, IDisposable
     public async Task<ActiveStreamInfo> StartStreamAsync(CameraEntity camera, StreamType streamType, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(camera.Id))
-        {
             throw new InvalidOperationException("Camera ID is required.");
-        }
 
         var cameraGuard = _cameraGuards.GetOrAdd(camera.Id, static _ => new SemaphoreSlim(1, 1));
         await cameraGuard.WaitAsync(cancellationToken);
@@ -41,16 +46,12 @@ public sealed class StreamEngine : IStreamEngine, IDisposable
             {
                 var activeMain = _sessions.Values.Count(static s => s.StreamType == StreamType.Main);
                 if (activeMain >= _options.MaxMainStreams)
-                {
                     streamType = StreamType.Sub;
-                }
             }
 
             var url = ResolveUrl(camera, streamType);
             if (string.IsNullOrWhiteSpace(url))
-            {
                 throw new InvalidOperationException("No stream URL configured for selected stream type.");
-            }
 
             if (_sessions.TryGetValue(camera.Id, out var existing))
             {
@@ -59,7 +60,6 @@ public sealed class StreamEngine : IStreamEngine, IDisposable
             }
 
             var player = _pool.Acquire(camera.Id, streamType);
-
             var session = new StreamSession
             {
                 CameraId = camera.Id,
@@ -70,10 +70,6 @@ public sealed class StreamEngine : IStreamEngine, IDisposable
             };
 
             _sessions[camera.Id] = session;
-            // NOTE: Do NOT call player.Play() here.
-            // The caller must set tile.MediaPlayer first so VideoView binds its HWND,
-            // then call BeginPlayAsync(). Calling Play() before VideoView is ready
-            // causes VLC to open a new native window instead of rendering in-app.
             return ToInfo(session, false);
         }
         finally
@@ -86,8 +82,11 @@ public sealed class StreamEngine : IStreamEngine, IDisposable
     {
         if (_sessions.TryGetValue(cameraId, out var session))
         {
-            var media = new Media(_libVlc, session.SourceUrl, FromType.FromLocation);            session.Player.Play(media);
-            // media ref will be cleaned up by VLC internally after it starts loading
+            using var media = new Media(_libVlc, session.SourceUrl, FromType.FromLocation);
+            session.Player.Play(media);
+            session.HasBegunPlay = true;
+            session.FailureCount = 0;
+            session.NextRetryUtc = DateTime.MinValue;
             session.LastHeartbeatUtc = DateTime.UtcNow;
         }
 
@@ -100,16 +99,9 @@ public sealed class StreamEngine : IStreamEngine, IDisposable
         await cameraGuard.WaitAsync(cancellationToken);
         try
         {
-            if (_sessions.TryRemove(cameraId, out var session))
+            if (_sessions.TryRemove(cameraId, out _))
             {
-                // player.Stop() is a blocking native VLC call (waits for decoder/network threads
-                // to flush). Run it on the thread pool so it never blocks the UI thread,
-                // regardless of whether WaitAsync completed synchronously.
-                await Task.Run(() =>
-                {
-                    session.Dispose();       // Player.Stop()
-                    _pool.Release(cameraId); // Player.Stop() again + return to pool
-                }, cancellationToken);
+                await Task.Run(() => _pool.Release(cameraId), cancellationToken);
             }
         }
         finally
@@ -135,10 +127,10 @@ public sealed class StreamEngine : IStreamEngine, IDisposable
     {
         return streamType switch
         {
-            StreamType.Main => camera.RtspMainUrl,
-            StreamType.Sub => string.IsNullOrWhiteSpace(camera.RtspSubUrl) ? camera.RtspMainUrl : camera.RtspSubUrl,
+            StreamType.Main     => camera.RtspMainUrl,
+            StreamType.Sub      => string.IsNullOrWhiteSpace(camera.RtspSubUrl) ? camera.RtspMainUrl : camera.RtspSubUrl,
             StreamType.Playback => camera.RtspMainUrl,
-            _ => camera.RtspSubUrl
+            _                   => camera.RtspSubUrl
         };
     }
 
@@ -146,10 +138,10 @@ public sealed class StreamEngine : IStreamEngine, IDisposable
     {
         return new ActiveStreamInfo
         {
-            CameraId = session.CameraId,
-            StreamType = session.StreamType,
-            StartedUtc = session.StartedUtc,
-            IsHealthy = isHealthy,
+            CameraId    = session.CameraId,
+            StreamType  = session.StreamType,
+            StartedUtc  = session.StartedUtc,
+            IsHealthy   = isHealthy,
             MediaPlayer = session.Player
         };
     }
@@ -161,6 +153,7 @@ public sealed class StreamEngine : IStreamEngine, IDisposable
             while (await _timer.WaitForNextTickAsync(cancellationToken))
             {
                 var now = DateTime.UtcNow;
+
                 var stale = _sessions.Values
                     .Where(s => now - s.LastHeartbeatUtc > _options.StaleSessionThreshold)
                     .ToList();
@@ -173,53 +166,52 @@ public sealed class StreamEngine : IStreamEngine, IDisposable
 
                 foreach (var session in _sessions.Values)
                 {
-                    // Only restart players that have genuinely failed.
-                    // Buffering and Opening are transient states — restarting them
-                    // creates an infinite restart loop while the stream is loading.
                     var state = session.Player.State;
-                    if (state == VLCState.Error ||
-                        state == VLCState.Ended ||
-                        state == VLCState.Stopped)
+
+                    // Reset backoff when stream is healthy.
+                    if (state == VLCState.Playing)
                     {
-                        using var media = new Media(_libVlc, session.SourceUrl, FromType.FromLocation);
-                        session.Player.Play(media);
+                        session.FailureCount = 0;
+                        session.NextRetryUtc = DateTime.MinValue;
+                    }
+
+                    // Only restart streams that have genuinely failed (Error/Ended).
+                    // Never restart Stopped (intentional) or Buffering/Opening (transient).
+                    // Use a gate to prevent hammering the NVR with simultaneous reconnects.
+                    if (session.HasBegunPlay &&
+                        (state == VLCState.Error || state == VLCState.Ended) &&
+                        now >= session.NextRetryUtc &&
+                        _reconnectGate.Wait(0))
+                    {
+                        try
+                        {
+                            var delay = BackoffTable[Math.Min(session.FailureCount, BackoffTable.Length - 1)];
+                            session.FailureCount++;
+                            session.NextRetryUtc = now + delay;
+                            using var media = new Media(_libVlc, session.SourceUrl, FromType.FromLocation);
+                            session.Player.Play(media);
+                        }
+                        finally { _reconnectGate.Release(); }
                     }
 
                     session.LastHeartbeatUtc = now;
                 }
             }
         }
-        catch (OperationCanceledException)
-        {
-            // Expected during shutdown.
-        }
-        catch (ObjectDisposedException)
-        {
-            // Expected if timer/cts disposed while loop is unwinding.
-        }
+        catch (OperationCanceledException) { }
+        catch (ObjectDisposedException) { }
     }
 
     public void Dispose()
     {
         if (Interlocked.Exchange(ref _disposed, 1) == 1)
-        {
             return;
-        }
 
-        try
-        {
-            _cts.Cancel();
-        }
-        catch (ObjectDisposedException)
-        {
-            // Already disposed by a prior shutdown path.
-        }
+        try { _cts.Cancel(); } catch (ObjectDisposedException) { }
 
         _timer.Dispose();
         foreach (var cameraId in _sessions.Keys)
-        {
             _pool.Release(cameraId);
-        }
 
         _cts.Dispose();
     }

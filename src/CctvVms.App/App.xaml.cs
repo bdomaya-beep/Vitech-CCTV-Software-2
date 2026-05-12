@@ -153,20 +153,24 @@ public partial class App : Application
 
 	private static LibVLC CreateLibVlc()
 	{
-		var stableOptions = new[]
+		var options = new[]
 		{
 			"--rtsp-tcp",
-			"--network-caching=1000",
-                      "--live-caching=1000",			"--file-caching=1000",		};
+			"--network-caching=1500",
+                      "--live-caching=1500",			"--file-caching=1500",
+						"--no-stats",
+			"--no-osd",
+			"--no-spu",
+		};
 
 		try
 		{
-			return new LibVLC(stableOptions);
+			return new LibVLC(options);
 		}
 		catch
 		{
 			// Fallback to baseline init when a platform-specific VLC option is unsupported.
-			try { return new LibVLC("--avcodec-hw=dxva2", "--rtsp-tcp", "--network-caching=1000"); }
+			try { return new LibVLC("--rtsp-tcp", "--network-caching=1500", "--no-stats"); }
 			catch { return new LibVLC(); }
 		}
 	}

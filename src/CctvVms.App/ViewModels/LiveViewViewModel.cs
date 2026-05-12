@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Threading;
 using CctvVms.App.Infrastructure;
@@ -225,8 +225,10 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
                 tile.StreamType = stream.StreamType;
                 SelectedTile = tile;
 
-                // Yield to the WPF render pass so VideoView has attached the HWND to the player.
+                // Wait for the Render pass that creates the ForegroundWindow HWND, then wait for Background
+                // so LayoutUpdated (player.Hwnd = hwnd) has definitely fired before Play() is called.
                 await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
+                await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Background);
                 // Only start playback for new sessions or when stopped; reusing an active sub-stream avoids restarting it.
                 if (needsPlay || !stream.MediaPlayer.IsPlaying)
                 {
@@ -244,6 +246,7 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
                     SelectedTile = tile;
 
                     await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
+                    await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Background);
                     await _streamEngine.BeginPlayAsync(camera.Id);
                 }
                 catch
@@ -376,7 +379,7 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
 
         _zoomedTile = tile;
 
-        // Show the overlay immediately with "Connecting…" so the user gets instant feedback.
+        // Show the overlay immediately with "Connectingâ€¦" so the user gets instant feedback.
         ZoomTiles.Clear();
         var zoomedTile = new VideoTileViewModel
         {
@@ -402,7 +405,7 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
             if (ct.IsCancellationRequested) return;
 
             // HWND already exists (overlay has been Visible since IsZoomedIn = true).
-            // Assign player → VideoView calls SetHwnd → VLC renders to the overlay.
+            // Assign player â†’ VideoView calls SetHwnd â†’ VLC renders to the overlay.
             zoomedTile.MediaPlayer = mainStream.MediaPlayer;
             await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
             await _streamEngine.BeginPlayAsync(camera.Id, ct);
@@ -422,7 +425,7 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
         var tileToRestore = _zoomedTile;
         _zoomedTile = null;
 
-        // Close overlay immediately — grid reappears, zoomed tile shows "Connecting…"
+        // Close overlay immediately â€” grid reappears, zoomed tile shows "Connectingâ€¦"
         // while the sub-stream reconnects.
         IsZoomedIn = false;
         ZoomTiles.Clear();
@@ -527,19 +530,22 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
         var activeTiles = Tiles.Where(t => !string.IsNullOrWhiteSpace(t.CameraId)).ToList();
         if (activeTiles.Count == 0) return;
 
-        // Phase 1: acquire sessions in parallel on thread pool — pool.Acquire is in-memory,
+        // Phase 1: acquire sessions in parallel on thread pool â€” pool.Acquire is in-memory,
         // but forcing off UI thread prevents synchronous SemaphoreSlim completions from
         // blocking the WPF message loop.
+        using var connectGate = new SemaphoreSlim(4, 4);
         var results = await Task.WhenAll(activeTiles.Select(tile => Task.Run(async () =>
         {
             var camera = _deviceTree.FindCamera(tile.CameraId);
             if (camera is null) return (tile: tile, info: (ActiveStreamInfo?)null);
+            await connectGate.WaitAsync();
             try
             {
                 var info = await _streamEngine.StartStreamAsync(camera, StreamType.Sub);
                 return (tile: tile, info: (ActiveStreamInfo?)info);
             }
             catch { return (tile: tile, info: (ActiveStreamInfo?)null); }
+            finally { connectGate.Release(); }
         })));
 
         // Phase 2: assign all MediaPlayers in a single UI dispatch.

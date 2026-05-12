@@ -210,7 +210,7 @@ public sealed class MainViewModel : ObservableObject
         _switchingWorkspace = true;
         try
         {
-            // Save current workspace BEFORE the flag is set — inline so the guard
+            // Save current workspace BEFORE the flag is set â€” inline so the guard
             // in SaveCurrentWorkspaceAsync cannot block it.
             if (_activeLiveWorkspace is not null)
             {
@@ -260,13 +260,13 @@ public sealed class MainViewModel : ObservableObject
 
     // Called synchronously BEFORE window.Show().
     // Step 1: null every main tile that has a matching camera in detached.
-    //         → main VideoView.OnMediaPlayerChanged → Detach(player) → player.Hwnd=0.
-    //         → main ForegroundWindow.Attach(null) is now a no-op — stops position-
+    //         â†’ main VideoView.OnMediaPlayerChanged â†’ Detach(player) â†’ player.Hwnd=0.
+    //         â†’ main ForegroundWindow.Attach(null) is now a no-op â€” stops position-
     //           tracking loop that would otherwise keep calling player.Hwnd=mainFgHwnd.
     // Step 2: assign players to detached tiles.
-    //         No VideoView exists yet (window not shown) → Attach is a no-op.
-    //         When window.Show() later fires VideoView.Loaded → ForegroundWindow created
-    //         → Attach(player) → player.Hwnd=detachedFgHwnd — with no competition.
+    //         No VideoView exists yet (window not shown) â†’ Attach is a no-op.
+    //         When window.Show() later fires VideoView.Loaded â†’ ForegroundWindow created
+    //         â†’ Attach(player) â†’ player.Hwnd=detachedFgHwnd â€” with no competition.
     public void TransferPlayersToDetached(LiveViewViewModel detached)
     {
         var transfers = new List<(VideoTileViewModel MainTile, VideoTileViewModel DetTile, LibVLCSharp.Shared.MediaPlayer Player)>();
@@ -286,34 +286,39 @@ public sealed class MainViewModel : ObservableObject
         foreach (var (mainTile, _, _) in transfers)
             mainTile.MediaPlayer = null;
 
-        // Step 2: pre-assign players to detached tiles (no VideoView yet → Attach no-op).
+        // Step 2: pre-assign players to detached tiles (no VideoView yet â†’ Attach no-op).
         foreach (var (_, detTile, player) in transfers)
             detTile.MediaPlayer = player;
     }
 
     public async Task<LiveViewViewModel> CreateNewLiveWindowAsync()
     {
-        // Pool pre-warm creates MaxActiveDecoders native MediaPlayers — run off the UI
-        // thread so the button click never causes a visible stutter.
-        var pool = await Task.Run(() => new StreamPoolManager(_libVlc, _streamOptions, new GpuLoadBalancer { MaxGpuStreams = 4 }));
-        var engine = new StreamEngine(_libVlc, pool, _streamOptions);
+        var secondaryOpts = new StreamEngineOptions
+        {
+            MaxActiveDecoders     = 16,
+            MaxMainStreams         = 16,
+            HealthCheckInterval   = TimeSpan.FromSeconds(20),
+            StaleSessionThreshold = TimeSpan.FromSeconds(60)
+        };
+        var pool = await Task.Run(() => new StreamPoolManager(_libVlc, secondaryOpts, new GpuLoadBalancer { MaxGpuStreams = 2 }));
+        var engine = new StreamEngine(_libVlc, pool, secondaryOpts);
         var vm = new LiveViewViewModel(engine, DeviceTree, ownsStreamEngine: true);
 
         await vm.ApplyLayoutAsync(LiveView.CurrentLayout);
         vm.SeedTileMetadata(LiveView.Tiles);
 
         // Streams are started lazily after the window is shown.
-        // See NewLiveView_OnClick → ContentRendered → StartAllCameraStreamsAsync.
+        // See NewLiveView_OnClick â†’ ContentRendered â†’ StartAllCameraStreamsAsync.
         return vm;
     }
 
     public async Task RestoreAfterDetachAsync()
     {
         // window.Closed fires after all detached VideoView.Unloaded events.
-        // Each Unloaded calls Detach(player) → player.Hwnd=0.
+        // Each Unloaded calls Detach(player) â†’ player.Hwnd=0.
         // Main tiles already have MediaPlayer=null (set in TransferPlayersToDetached step 1).
         // RebindFromEngineAsync finds main tiles with CameraId but no MediaPlayer,
-        // looks up the active session, sets tile.MediaPlayer=player → Attach →
+        // looks up the active session, sets tile.MediaPlayer=player â†’ Attach â†’
         // player.Hwnd=mainFgHwnd, restoring video in the main window.
         await LiveView.RebindFromEngineAsync();
     }
