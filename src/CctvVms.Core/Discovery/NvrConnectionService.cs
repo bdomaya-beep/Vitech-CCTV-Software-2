@@ -8,6 +8,11 @@ public sealed class NvrConnectionService : INvrConnectionService
 {
     public async Task<NvrDevice> ConnectAndLoadCameras(string ip, string username, string password, string nvrType = "Dahua", int devicePort = 37777, int maxChannels = 32, CancellationToken cancellationToken = default)
     {
+        return await ConnectAndLoadCamerasWithRtsp(ip, username, password, nvrType, devicePort, 554, maxChannels, cancellationToken);
+    }
+
+    public async Task<NvrDevice> ConnectAndLoadCamerasWithRtsp(string ip, string username, string password, string nvrType, int devicePort, int rtspPort, int maxChannels, CancellationToken cancellationToken = default)
+    {
         cancellationToken.ThrowIfCancellationRequested();
 
         var nvr = new NvrDevice
@@ -17,21 +22,17 @@ public sealed class NvrConnectionService : INvrConnectionService
             Password = password,
             Name = $"NVR ({ip})",
             NvrType = nvrType,
-            RtspPort = 554
+            RtspPort = rtspPort
         };
 
-        var serviceOk = await CheckServicePortAsync(ip, devicePort, cancellationToken);
-        if (!serviceOk)
-        {
-            nvr.Connected = false;
-            nvr.DiagnosticMessage = $"Unable to reach device service on {ip}:{devicePort}.";
-            return nvr;
-        }
-
-        var cameras = BuildChannels(ip, username, password, nvrType, maxChannels);
+        var cameras = BuildChannels(ip, username, password, nvrType, maxChannels, rtspPort);
         nvr.Cameras = cameras;
-        nvr.Connected = true;
-        nvr.DiagnosticMessage = $"Connected via {devicePort}. Imported {cameras.Count} channel placeholders.";
+
+        var serviceOk = await CheckServicePortAsync(ip, devicePort, cancellationToken);
+        nvr.Connected = serviceOk || await CheckServicePortAsync(ip, rtspPort, cancellationToken);
+        nvr.DiagnosticMessage = nvr.Connected
+            ? $"Connected. Imported {cameras.Count} channel placeholders."
+            : $"Management port {devicePort} unreachable. Channels built from {ip} — streams will connect when opened.";
 
         return nvr;
     }
@@ -48,14 +49,19 @@ public sealed class NvrConnectionService : INvrConnectionService
         return await CheckServicePortAsync(ip, devicePort, cancellationToken);
     }
 
-    private static List<Camera> BuildChannels(string ip, string user, string pass, string nvrType, int maxChannels)
+    public (string Main, string Sub) BuildStreamUrls(string ip, string username, string password, int channel, string nvrType, int rtspPort = 554)
+    {
+        return BuildChannelUrls(ip, username, password, channel, nvrType, rtspPort);
+    }
+
+    private static List<Camera> BuildChannels(string ip, string user, string pass, string nvrType, int maxChannels, int rtspPort = 554)
     {
         var scanLimit = Math.Min(Math.Max(maxChannels, 1), ResolveMaxChannels(nvrType));
         var list = new List<Camera>();
 
         for (var channel = 1; channel <= scanLimit; channel++)
         {
-            var urls = BuildChannelUrls(ip, user, pass, channel, nvrType, 554);
+            var urls = BuildChannelUrls(ip, user, pass, channel, nvrType, rtspPort);
             list.Add(new Camera
             {
                 Id = channel.ToString(),
@@ -106,7 +112,7 @@ public sealed class NvrConnectionService : INvrConnectionService
             $"rtsp://{credentialPrefix}{ip}:{rtspPort}/ch{channel}/sub");
     }
 
-    private static async Task<bool> CheckServicePortAsync(string ip, int port, CancellationToken cancellationToken)
+    private static async Task<bool> CheckServicePortAsync(string ip, int port, CancellationToken cancellationToken = default)
     {
         try
         {

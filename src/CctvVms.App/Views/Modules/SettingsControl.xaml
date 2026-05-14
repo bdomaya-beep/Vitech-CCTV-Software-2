@@ -1,26 +1,167 @@
-<UserControl x:Class="CctvVms.App.Views.Modules.SettingsControl"
+﻿<UserControl x:Class="CctvVms.App.Views.Modules.SettingsControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d">
-    <Grid Margin="18">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="200" />
-            <ColumnDefinition Width="220" />
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
 
-        <TextBlock Text="Max Main Streams" VerticalAlignment="Center" />
-        <TextBox Grid.Column="1" Text="{Binding MaxMainStreams}" Margin="8,0,0,12" />
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="18" MaxWidth="640">
 
-        <TextBlock Grid.Row="1" Text="Max Active Decoders" VerticalAlignment="Center" />
-        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding MaxActiveDecoders}" Margin="8,0,0,12" />
+            <!-- ── Streaming Settings ──────────────────────────────── -->
+            <TextBlock Text="Streaming Settings"
+                       FontSize="16" FontWeight="SemiBold" Foreground="#E0E0E0"
+                       Margin="0,0,0,12"/>
 
-        <Button Grid.Row="2" Grid.Column="1" Width="120" Height="32" HorizontalAlignment="Left" Content="Save Settings" Command="{Binding SaveCommand}" />
-    </Grid>
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="220"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="Max Main Streams" VerticalAlignment="Center" Foreground="#C0C0C0"/>
+                <TextBox Grid.Column="1" Text="{Binding MaxMainStreams}" Margin="8,0,0,10"/>
+
+                <TextBlock Grid.Row="1" Text="Max Active Decoders" VerticalAlignment="Center" Foreground="#C0C0C0"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding MaxActiveDecoders}" Margin="8,0,0,10"/>
+
+                <TextBlock Grid.Row="2" Text="RTSP Transport" VerticalAlignment="Center" Foreground="#C0C0C0"/>
+                <ComboBox Grid.Row="2" Grid.Column="1"
+                          Margin="8,0,0,0"
+                          ItemsSource="{Binding RtspTransportOptions}"
+                          SelectedItem="{Binding RtspTransport}"/>
+            </Grid>
+
+            <Button Width="120" Height="32" HorizontalAlignment="Left" Margin="0,8,0,0"
+                    Content="Save Settings" Command="{Binding SaveCommand}"/>
+
+            <!-- ── Recommendation ─────────────────────────────────── -->
+            <Border Margin="0,24,0,0" Padding="16"
+                    Background="#1A1A1A" CornerRadius="6"
+                    BorderBrush="#2A2A2A" BorderThickness="1">
+                <StackPanel>
+
+                    <TextBlock Text="Recommendation"
+                               FontSize="15" FontWeight="SemiBold"
+                               Foreground="#E0E0E0" Margin="0,0,0,10"/>
+
+                    <TextBlock Text="For stable monitoring:"
+                               Foreground="#A0A0A0" Margin="0,0,0,6"/>
+
+                    <!-- TCP recommendation badge -->
+                    <Border Background="#111" CornerRadius="4" Padding="12,8" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="RTSP over TCP"
+                                       FontFamily="Consolas,Courier New,monospace"
+                                       Foreground="#E0E0E0" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" Content="&#xE8C8;" FontFamily="Segoe MDL2 Assets"
+                                    Background="Transparent" BorderThickness="0"
+                                    Foreground="#808080" Padding="4"
+                                    ToolTip="Copy"
+                                    Command="{Binding CopyTcpRecommendationCommand}"/>
+                        </Grid>
+                    </Border>
+
+                    <TextBlock Text="especially:" Foreground="#A0A0A0" Margin="0,0,0,4"/>
+                    <StackPanel Margin="12,0,0,0">
+                        <TextBlock Text="• WiFi"              Foreground="#909090" Margin="0,2"/>
+                        <TextBlock Text="• internet viewing"  Foreground="#E08040" Margin="0,2"/>
+                        <TextBlock Text="• remote cameras"    Foreground="#909090" Margin="0,2"/>
+                    </StackPanel>
+
+                </StackPanel>
+            </Border>
+
+            <!-- ── Recommended Live Preview Settings ──────────────── -->
+            <Border Margin="0,16,0,0" Padding="16"
+                    Background="#1A1A1A" CornerRadius="6"
+                    BorderBrush="#2A2A2A" BorderThickness="1">
+                <StackPanel>
+
+                    <TextBlock Text="Recommended Live Preview Settings"
+                               FontSize="15" FontWeight="SemiBold"
+                               Foreground="#E0E0E0" Margin="0,0,0,12"/>
+
+                    <!-- Table header -->
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Setting"    FontWeight="SemiBold" Foreground="#A0A0A0"/>
+                        <TextBlock Grid.Column="1" Text="Recommended" FontWeight="SemiBold" Foreground="#A0A0A0"/>
+                    </Grid>
+                    <Separator Background="#2A2A2A" Margin="0,0,0,6"/>
+
+                    <!-- Resolution -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Resolution"        Foreground="#C0C0C0"/>
+                        <TextBlock Grid.Column="1" Text="640×360 or 720p" Foreground="#E0E0E0"/>
+                    </Grid>
+                    <Separator Background="#1E1E1E" Margin="0,0,0,8"/>
+
+                    <!-- FPS -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="FPS"               Foreground="#C0C0C0"/>
+                        <TextBlock Grid.Column="1" Text="10–15 FPS" Foreground="#E0E0E0"/>
+                    </Grid>
+                    <Separator Background="#1E1E1E" Margin="0,0,0,8"/>
+
+                    <!-- Bitrate -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Bitrate"           Foreground="#C0C0C0"/>
+                        <TextBlock Grid.Column="1" Text="Moderate" Foreground="#E0E0E0"/>
+                    </Grid>
+                    <Separator Background="#1E1E1E" Margin="0,0,0,8"/>
+
+                    <!-- Stream -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Stream"            Foreground="#C0C0C0"/>
+                        <TextBlock Grid.Column="1" Text="Substream" Foreground="#E0E0E0"/>
+                    </Grid>
+
+                </StackPanel>
+            </Border>
+
+            <!-- ── Main Stream note ───────────────────────────────── -->
+            <Border Margin="0,16,0,0" Padding="16"
+                    Background="#1A1A1A" CornerRadius="6"
+                    BorderBrush="#2A2A2A" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="Use Main Stream ONLY For:"
+                               FontSize="14" FontWeight="SemiBold"
+                               Foreground="#E0E0E0" Margin="0,0,0,8"/>
+                    <TextBlock Text="• fullscreen"  Foreground="#909090" Margin="4,2"/>
+                    <TextBlock Text="• recording"   Foreground="#909090" Margin="4,2"/>
+                    <TextBlock Text="• playback"    Foreground="#909090" Margin="4,2"/>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

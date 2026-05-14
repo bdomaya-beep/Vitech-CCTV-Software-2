@@ -44,9 +44,9 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "dependencies": {
-            "LibVLCSharp": {
+            "FFmpeg.AutoGen": {
               "target": "Package",
-              "version": "[3.8.5, )"
+              "version": "[6.0.0, )"
             }
           },
           "imports": [

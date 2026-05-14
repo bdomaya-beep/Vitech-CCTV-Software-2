@@ -120,32 +120,25 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
     public async Task RebindAndResumeAsync()
     {
         var activeTiles = Tiles
-            .Where(t => !string.IsNullOrWhiteSpace(t.CameraId) && t.MediaPlayer is not null)
+            .Where(t => !string.IsNullOrWhiteSpace(t.CameraId) && t.VideoSource is not null)
             .ToList();
 
         foreach (var tile in activeTiles)
         {
-            var player = tile.MediaPlayer;
-            tile.MediaPlayer = null;
-            await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
-            tile.MediaPlayer = player;
-            await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
             await _streamEngine.BeginPlayAsync(tile.CameraId);
         }
 
         if (IsZoomedIn)
         {
             var activeZoomTiles = ZoomTiles
-                .Where(t => !string.IsNullOrWhiteSpace(t.CameraId) && t.MediaPlayer is not null)
+                .Where(t => !string.IsNullOrWhiteSpace(t.CameraId) && t.VideoSource is not null)
                 .ToList();
 
             foreach (var tile in activeZoomTiles)
             {
-                var player = tile.MediaPlayer;
-                tile.MediaPlayer = null;
-                await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
-                tile.MediaPlayer = player;
-                await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
+                var player = tile.VideoSource;
+                tile.VideoSource = null;
+                tile.VideoSource = player;
                 await _streamEngine.BeginPlayAsync(tile.CameraId);
             }
         }
@@ -184,7 +177,7 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
                 tile.CameraId = sourceTile.CameraId;
                 tile.CameraName = sourceTile.CameraName;
                 tile.CameraStatus = sourceTile.CameraStatus;
-                tile.MediaPlayer = sourceTile.MediaPlayer;
+                tile.VideoSource = sourceTile.VideoSource;
                 tile.StreamType = sourceTile.StreamType;
 
                 ClearTileUi(sourceTile);
@@ -221,16 +214,14 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
                     : await Task.Run(async () => await _streamEngine.StartStreamAsync(camera, StreamType.Sub));
 
                 // Assign player to tile FIRST so VideoView binds its HWND, THEN start playback.
-                tile.MediaPlayer = stream.MediaPlayer;
+                tile.VideoSource = stream.VideoSource;
                 tile.StreamType = stream.StreamType;
                 SelectedTile = tile;
 
                 // Wait for the Render pass that creates the ForegroundWindow HWND, then wait for Background
                 // so LayoutUpdated (player.Hwnd = hwnd) has definitely fired before Play() is called.
-                await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
-                await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Background);
                 // Only start playback for new sessions or when stopped; reusing an active sub-stream avoids restarting it.
-                if (needsPlay || !stream.MediaPlayer.IsPlaying)
+                if (needsPlay || false)
                 {
                     await _streamEngine.BeginPlayAsync(camera.Id);
                 }
@@ -241,18 +232,15 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
                 try
                 {
                     var subStream = await Task.Run(async () => await _streamEngine.StartStreamAsync(camera, StreamType.Sub));
-                    tile.MediaPlayer = subStream.MediaPlayer;
+                    tile.VideoSource = subStream.VideoSource;
                     tile.StreamType = subStream.StreamType;
                     SelectedTile = tile;
-
-                    await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
-                    await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Background);
                     await _streamEngine.BeginPlayAsync(camera.Id);
                 }
                 catch
                 {
                     tile.CameraStatus = DeviceStatus.Offline;
-                    tile.MediaPlayer = null;
+                    tile.VideoSource = null;
                     tile.StreamType = StreamType.Sub;
                 }
             }
@@ -324,10 +312,9 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
         }
 
         var focused = await _streamEngine.SwitchStreamAsync(camera, StreamType.Main);
-        tile.MediaPlayer = focused.MediaPlayer;
+        tile.VideoSource = focused.VideoSource;
         tile.StreamType = focused.StreamType;
         SelectedTile = tile;
-        await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
         await _streamEngine.BeginPlayAsync(camera.Id);
 
         var nonFocusedTiles = Tiles.Where(t => t.TileId != tile.TileId && !string.IsNullOrWhiteSpace(t.CameraId)).ToList();
@@ -340,10 +327,9 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
             }
 
             var downgraded = await _streamEngine.SwitchStreamAsync(otherCamera, StreamType.Sub);
-            other.MediaPlayer = downgraded.MediaPlayer;
+            other.VideoSource = downgraded.VideoSource;
             other.StreamType = downgraded.StreamType;
             other.IsFocused = false;
-            await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
             await _streamEngine.BeginPlayAsync(otherCamera.Id);
         }
     }
@@ -393,7 +379,6 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
         };
         ZoomTiles.Add(zoomedTile);
         IsZoomedIn = true;
-        await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
 
         if (ct.IsCancellationRequested) return;
 
@@ -406,8 +391,7 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
 
             // HWND already exists (overlay has been Visible since IsZoomedIn = true).
             // Assign player â†’ VideoView calls SetHwnd â†’ VLC renders to the overlay.
-            zoomedTile.MediaPlayer = mainStream.MediaPlayer;
-            await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
+            zoomedTile.VideoSource = mainStream.VideoSource;
             await _streamEngine.BeginPlayAsync(camera.Id, ct);
             zoomedTile.IsDeploying = false;
         }
@@ -437,13 +421,12 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
         if (camera is null) return;
 
         tileToRestore.IsDeploying = true;
-        tileToRestore.MediaPlayer = null;
+        tileToRestore.VideoSource = null;
 
         try
         {
             var subStream = await _streamEngine.SwitchStreamAsync(camera, StreamType.Sub);
-            tileToRestore.MediaPlayer = subStream.MediaPlayer;
-            await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
+            tileToRestore.VideoSource = subStream.VideoSource;
             await _streamEngine.BeginPlayAsync(camera.Id);
             tileToRestore.IsDeploying = false;
         }
@@ -457,7 +440,7 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
     {
         tile.CameraId = string.Empty;
         tile.CameraName = "Empty";
-        tile.MediaPlayer = null;
+        tile.VideoSource = null;
         tile.CameraStatus = DeviceStatus.Unknown;
         tile.StreamType = StreamType.Sub;
         tile.IsDeploying = false;
@@ -510,12 +493,11 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
 
     public async Task RebindFromEngineAsync()
     {
-        foreach (var tile in Tiles.Where(t => !string.IsNullOrWhiteSpace(t.CameraId) && t.MediaPlayer is null))
+        foreach (var tile in Tiles.Where(t => !string.IsNullOrWhiteSpace(t.CameraId) && t.VideoSource is null))
         {
             var stream = _streamEngine.GetActiveStreams().FirstOrDefault(s => s.CameraId == tile.CameraId);
-            if (stream?.MediaPlayer is null) continue;
-            tile.MediaPlayer = stream.MediaPlayer;
-            await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
+            if (stream?.VideoSource is null) continue;
+            tile.VideoSource = stream.VideoSource;
         }
     }
 
@@ -554,13 +536,12 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
             foreach (var (tile, info) in results)
             {
                 if (info is null) continue;
-                tile.MediaPlayer = info.MediaPlayer;
+                tile.VideoSource = info.VideoSource;
                 tile.StreamType  = info.StreamType;
             }
         });
 
         // Phase 3: one render pass so VideoView.ForegroundWindow sets all HWNDs.
-        await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
 
         // Phase 4: begin playback for all streams in parallel on thread pool.
         await Task.WhenAll(results
@@ -582,4 +563,5 @@ public sealed class LiveViewWorkspaceState
     public string Layout { get; set; } = "2x2";
     public List<string> CameraIds { get; set; } = new();
 }
+
 

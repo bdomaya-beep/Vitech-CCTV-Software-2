@@ -69,6 +69,13 @@ public sealed class DeviceTreeViewModel : ObservableObject
             var cameras = await _dataStore.GetCamerasByDeviceAsync(device.Id);
             foreach (var camera in cameras)
             {
+                // Always rebuild RTSP URLs from the NVR device - never connect directly to individual cameras.
+                if (camera.Channel > 0 && !string.IsNullOrWhiteSpace(device.IpAddress))
+                {
+                    var urls = _nvrConnection.BuildStreamUrls(device.IpAddress, device.Username, device.Password, camera.Channel, device.NvrType);
+                    camera.RtspMainUrl = urls.Main;
+                    camera.RtspSubUrl  = urls.Sub;
+                }
                 deviceNode.Children.Add(new DeviceTreeNodeViewModel
                 {
                     Id = camera.Id,
@@ -110,13 +117,13 @@ public sealed class DeviceTreeViewModel : ObservableObject
 
     public async Task<NvrDevice> AddDeviceByInputAsync(DeviceConnectionInput input)
     {
-        var connected = await _nvrConnection.ConnectAndLoadCameras(input.IpAddress, input.Username, input.Password, input.NvrType, input.DevicePort, input.MaxChannels);
+        var nvrSvc = (CctvVms.Core.Discovery.NvrConnectionService)_nvrConnection;
+        var connected = await nvrSvc.ConnectAndLoadCamerasWithRtsp(
+            input.IpAddress, input.Username, input.Password, input.NvrType,
+            input.DevicePort, input.RtspPort, input.MaxChannels);
         connected.Name = string.IsNullOrWhiteSpace(input.Name) ? connected.Name : input.Name;
-        if (connected.Connected && connected.Cameras.Count > 0)
-        {
-            await PersistConnectedNvrAsync(connected, DeviceStatus.Online);
-        }
-
+        var status = connected.Connected ? DeviceStatus.Online : DeviceStatus.Offline;
+        await PersistConnectedNvrAsync(connected, status);
         return connected;
     }
 

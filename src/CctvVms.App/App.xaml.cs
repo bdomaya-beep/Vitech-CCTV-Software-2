@@ -1,3 +1,4 @@
+﻿using FFmpeg.AutoGen;
 using System.Windows;
 using System.IO;
 using System.ComponentModel;
@@ -7,7 +8,6 @@ using CctvVms.Core.Contracts;
 using CctvVms.Core.Discovery;
 using CctvVms.Core.Streaming;
 using CctvVms.Data;
-using LibVLCSharp.Shared;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CctvVms.App;
@@ -20,13 +20,20 @@ public partial class App : Application
 	{
 		base.OnStartup(e);
 
-		try
-		{
-			var nativePath = GetLibVlcNativePath();
-			Directory.SetCurrentDirectory(AppContext.BaseDirectory);
-			ConfigureLibVlcNativePath();
-			LibVLCSharp.Shared.Core.Initialize(nativePath);
+DispatcherUnhandledException += (_, ex) =>
+{
+var log = Path.Combine(AppContext.BaseDirectory, "crash_ui.log");
+File.WriteAllText(log, $"{ex.Exception.GetType()}: {ex.Exception.Message}\n{ex.Exception.StackTrace}");
+ex.Handled = true; // keep app alive; show error in title bar instead of crashing
+};
+AppDomain.CurrentDomain.UnhandledException += (_, ex) =>
+{
+var log = Path.Combine(AppContext.BaseDirectory, "crash_bg.log");
+File.WriteAllText(log, ex.ExceptionObject.ToString() ?? "unknown");
+};
 
+		try
+		{			Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 			var services = new ServiceCollection();
 			ConfigureServices(services);
 			_serviceProvider = services.BuildServiceProvider();
@@ -43,61 +50,12 @@ public partial class App : Application
 		catch (Exception ex)
 		{
 			var innerEx = ex.InnerException ?? ex;
+			var logPath = Path.Combine(AppContext.BaseDirectory, "startup_error.log");
+			File.WriteAllText(logPath, $"{innerEx.GetType().FullName}: {innerEx.Message}\n\n{innerEx.StackTrace}\n\nOuter: {ex.Message}");
 			MessageBox.Show($"Startup Error: {innerEx.Message}\n\n{innerEx.StackTrace}", "Critical Error", MessageBoxButton.OK, MessageBoxImage.Error);
 			Shutdown(1);
 		}
 	}
-
-	private static void ConfigureLibVlcNativePath()
-	{
-		var nativePath = GetLibVlcNativePath();
-		var pluginPath = Path.Combine(nativePath, "plugins");
-
-		if (!Directory.Exists(nativePath))
-		{
-			throw new DirectoryNotFoundException($"LibVLC native folder was not found: {nativePath}");
-		}
-
-		if (!Directory.Exists(pluginPath))
-		{
-			throw new DirectoryNotFoundException($"LibVLC plugin folder was not found: {pluginPath}");
-		}
-
-		var currentPath = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
-		if (!currentPath.Contains(nativePath, StringComparison.OrdinalIgnoreCase))
-		{
-			Environment.SetEnvironmentVariable("PATH", nativePath + Path.PathSeparator + currentPath);
-		}
-
-		Environment.SetEnvironmentVariable("VLC_PLUGIN_PATH", pluginPath);
-
-		SetDllDirectory(nativePath);
-		PreloadLibVlc(nativePath);
-	}
-
-	private static string GetLibVlcNativePath()
-	{
-		var architectureFolder = Environment.Is64BitProcess ? "win-x64" : "win-x86";
-		return Path.Combine(AppContext.BaseDirectory, "libvlc", architectureFolder);
-	}
-
-	private static void PreloadLibVlc(string nativePath)
-	{
-		LoadNativeLibrary(Path.Combine(nativePath, "libvlccore.dll"));
-		LoadNativeLibrary(Path.Combine(nativePath, "libvlc.dll"));
-	}
-
-	private static void LoadNativeLibrary(string libraryPath)
-	{
-		if (!NativeLibrary.TryLoad(libraryPath, out _))
-		{
-			var error = Marshal.GetLastWin32Error();
-			throw new Win32Exception(error, $"Failed to load native library '{libraryPath}'.");
-		}
-	}
-
-	[DllImport("kernel32", SetLastError = true, CharSet = CharSet.Unicode)]
-	private static extern bool SetDllDirectory(string lpPathName);
 
 	protected override void OnExit(ExitEventArgs e)
 	{
@@ -116,20 +74,7 @@ public partial class App : Application
 			MaxMainStreams = 2,
 			HealthCheckInterval = TimeSpan.FromSeconds(8),
 			StaleSessionThreshold = TimeSpan.FromSeconds(30)
-		});
-
-		services.AddSingleton(_ => CreateLibVlc());
-		services.AddSingleton(_ => new GpuLoadBalancer { MaxGpuStreams = 4 });
-		services.AddSingleton<IStreamPoolManager>(sp =>
-		{
-			var pool = new StreamPoolManager(
-				sp.GetRequiredService<LibVLC>(),
-				sp.GetRequiredService<StreamEngineOptions>(),
-				sp.GetRequiredService<GpuLoadBalancer>());
-			return pool;
-		});
-		// IStreamPoolManager registered above with pre-warm factory
-		services.AddSingleton<IStreamEngine, StreamEngine>();
+		});		services.AddSingleton<IStreamEngine>(sp => new StreamEngine(sp.GetRequiredService<StreamEngineOptions>()));
 
 		services.AddSingleton<IDataStoreService>(_ => new SqliteDataStoreService(Path.Combine(appData, "vms.db")));
 
@@ -146,33 +91,14 @@ public partial class App : Application
 		services.AddSingleton<PlaybackViewModel>();
 		services.AddSingleton<DeviceManagerViewModel>();
 		services.AddSingleton<SettingsViewModel>();
+// SettingsViewModel needs StreamEngineOptions injected (already registered as singleton above)
 		services.AddSingleton<MainViewModel>();
 
 		services.AddSingleton<MainWindow>();
 	}
-
-	private static LibVLC CreateLibVlc()
-	{
-		var options = new[]
-		{
-			"--rtsp-tcp",
-			"--network-caching=1500",
-                      "--live-caching=1500",			"--file-caching=1500",
-						"--no-stats",
-			"--no-osd",
-			"--no-spu",
-		};
-
-		try
-		{
-			return new LibVLC(options);
-		}
-		catch
-		{
-			// Fallback to baseline init when a platform-specific VLC option is unsupported.
-			try { return new LibVLC("--rtsp-tcp", "--network-caching=1500", "--no-stats"); }
-			catch { return new LibVLC(); }
-		}
-	}
 }
+
+
+
+
 

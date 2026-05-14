@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CctvVms.Data")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+33586e3b94751c18154ee94de58f10704125619e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b8043dc0d6c0534dd08a72704081a9d6fb739995")]
 [assembly: System.Reflection.AssemblyProductAttribute("CctvVms.Data")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CctvVms.Data")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

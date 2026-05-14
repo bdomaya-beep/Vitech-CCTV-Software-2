@@ -1,8 +1,8 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using CctvVms.App.Infrastructure;
 using CctvVms.Core.Contracts;
 using CctvVms.Core.Domain;
-using LibVLCSharp.Shared;
+using CctvVms.Core.Streaming;
 
 namespace CctvVms.App.ViewModels;
 
@@ -14,7 +14,7 @@ public sealed class PlaybackViewModel : ObservableObject
     private DateTime _selectedDate = DateTime.Today;
     private double _timelinePosition;
     private string _playbackState = "Stopped";
-    private MediaPlayer? _playbackPlayer;
+    private IVideoSource? _playbackSource;
     private readonly RelayCommand _pauseCommand;
     private readonly RelayCommand _fastForwardCommand;
     private readonly RelayCommand _rewindCommand;
@@ -25,9 +25,9 @@ public sealed class PlaybackViewModel : ObservableObject
         _streamEngine = streamEngine;
 
         PlayCommand = new AsyncRelayCommand(PlayAsync, () => SelectedCamera is not null);
-        _pauseCommand = new RelayCommand(PausePlayback, () => PlaybackPlayer is not null);
-        _fastForwardCommand = new RelayCommand(() => SeekBySeconds(30), () => PlaybackPlayer is not null);
-        _rewindCommand = new RelayCommand(() => SeekBySeconds(-30), () => PlaybackPlayer is not null);
+        _pauseCommand = new RelayCommand(PausePlayback, () => PlaybackSource is not null);
+        _fastForwardCommand = new RelayCommand(() => { PlaybackState = "Playing"; }, () => PlaybackSource is not null);
+        _rewindCommand = new RelayCommand(() => { PlaybackState = "Playing"; }, () => PlaybackSource is not null);
         PauseCommand = _pauseCommand;
         FastForwardCommand = _fastForwardCommand;
         RewindCommand = _rewindCommand;
@@ -41,9 +41,7 @@ public sealed class PlaybackViewModel : ObservableObject
         set
         {
             if (SetProperty(ref _selectedCamera, value))
-            {
                 (PlayCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
-            }
         }
     }
 
@@ -65,12 +63,12 @@ public sealed class PlaybackViewModel : ObservableObject
         set => SetProperty(ref _playbackState, value);
     }
 
-    public MediaPlayer? PlaybackPlayer
+    public IVideoSource? PlaybackSource
     {
-        get => _playbackPlayer;
+        get => _playbackSource;
         set
         {
-            if (SetProperty(ref _playbackPlayer, value))
+            if (SetProperty(ref _playbackSource, value))
             {
                 _pauseCommand.NotifyCanExecuteChanged();
                 _fastForwardCommand.NotifyCanExecuteChanged();
@@ -88,59 +86,25 @@ public sealed class PlaybackViewModel : ObservableObject
     {
         Cameras.Clear();
         foreach (var camera in await _store.GetAllCamerasAsync())
-        {
             Cameras.Add(camera);
-        }
-
         SelectedCamera ??= Cameras.FirstOrDefault();
     }
 
     private async Task PlayAsync()
     {
-        if (SelectedCamera is null)
-        {
-            return;
-        }
+        if (SelectedCamera is null) return;
 
-        if (PlaybackPlayer is not null)
-        {
-            PlaybackPlayer.Play();
-        }
-        else
-        {
-            var active = await _streamEngine.StartStreamAsync(SelectedCamera, StreamType.Playback);
-            PlaybackPlayer = active.MediaPlayer;
-        }
-
+        var active = await _streamEngine.StartStreamAsync(SelectedCamera, StreamType.Playback);
+        PlaybackSource = active.VideoSource;
+        await _streamEngine.BeginPlayAsync(SelectedCamera.Id);
         PlaybackState = "Playing";
     }
 
     private void PausePlayback()
     {
-        if (PlaybackPlayer is null)
-        {
-            return;
-        }
-
-        PlaybackPlayer.Pause();
+        if (SelectedCamera is null || PlaybackSource is null) return;
+        _ = _streamEngine.StopStreamAsync(SelectedCamera.Id);
+        PlaybackSource = null;
         PlaybackState = "Paused";
-    }
-
-    private void SeekBySeconds(int seconds)
-    {
-        if (PlaybackPlayer is null)
-        {
-            return;
-        }
-
-        var target = PlaybackPlayer.Time + seconds * 1000L;
-        if (target < 0)
-        {
-            target = 0;
-        }
-
-        PlaybackPlayer.Time = target;
-        TimelinePosition = target / 1000d;
-        PlaybackState = "Playing";
     }
 }

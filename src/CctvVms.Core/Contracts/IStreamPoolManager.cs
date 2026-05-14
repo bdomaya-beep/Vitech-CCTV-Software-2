@@ -1,13 +1,8 @@
-using CctvVms.Core.Domain;
-using LibVLCSharp.Shared;
+﻿namespace CctvVms.Core.Contracts;
 
-namespace CctvVms.Core.Contracts;
-
+// Replaced by per-stream RtspVideoDecoder in the new FFmpeg pipeline.
 public interface IStreamPoolManager
 {
     int ActiveDecoderCount { get; }
-    int MaxDecoders { get; }
-
-    MediaPlayer Acquire(string cameraId, StreamType streamType);
-    void Release(string cameraId);
+    int MaxDecoders        { get; }
 }

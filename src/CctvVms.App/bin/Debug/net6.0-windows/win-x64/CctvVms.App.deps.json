@@ -11,8 +11,8 @@
         "dependencies": {
           "CctvVms.Core": "1.0.0",
           "CctvVms.Data": "1.0.0",
-          "LibVLCSharp.WPF": "3.8.5",
           "Microsoft.Extensions.DependencyInjection": "8.0.0",
+          "Sdcb.FFmpeg.runtime.windows-x64": "6.0.26",
           "runtimepack.Microsoft.NETCore.App.Runtime.win-x64": "6.0.36",
           "runtimepack.Microsoft.WindowsDesktop.App.Runtime.win-x64": "6.0.36"
         },
@@ -1082,22 +1082,11 @@
           }
         }
       },
-      "LibVLCSharp/3.8.5": {
+      "FFmpeg.AutoGen/6.0.0": {
         "runtime": {
-          "lib/net6.0/LibVLCSharp.dll": {
-            "assemblyVersion": "3.8.5.0",
-            "fileVersion": "3.8.5.0"
-          }
-        }
-      },
-      "LibVLCSharp.WPF/3.8.5": {
-        "dependencies": {
-          "LibVLCSharp": "3.8.5"
-        },
-        "runtime": {
-          "lib/net6.0-windows7.0/LibVLCSharp.WPF.dll": {
-            "assemblyVersion": "3.8.5.0",
-            "fileVersion": "3.8.5.0"
+          "lib/netstandard2.1/FFmpeg.AutoGen.dll": {
+            "assemblyVersion": "6.0.0.0",
+            "fileVersion": "6.0.0.0"
           }
         }
       },
@@ -1134,6 +1123,34 @@
           "lib/net6.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
             "assemblyVersion": "8.0.0.0",
             "fileVersion": "8.0.23.53103"
+          }
+        }
+      },
+      "Sdcb.FFmpeg.runtime.windows-x64/6.0.26": {
+        "native": {
+          "runtimes/win-x64/native/avcodec-60.dll": {
+            "fileVersion": "60.3.100.0"
+          },
+          "runtimes/win-x64/native/avdevice-60.dll": {
+            "fileVersion": "60.1.100.0"
+          },
+          "runtimes/win-x64/native/avfilter-9.dll": {
+            "fileVersion": "9.3.100.0"
+          },
+          "runtimes/win-x64/native/avformat-60.dll": {
+            "fileVersion": "60.3.100.0"
+          },
+          "runtimes/win-x64/native/avutil-58.dll": {
+            "fileVersion": "58.2.100.0"
+          },
+          "runtimes/win-x64/native/postproc-57.dll": {
+            "fileVersion": "57.1.100.0"
+          },
+          "runtimes/win-x64/native/swresample-4.dll": {
+            "fileVersion": "4.10.100.0"
+          },
+          "runtimes/win-x64/native/swscale-7.dll": {
+            "fileVersion": "7.1.100.0"
           }
         }
       },
@@ -1177,7 +1194,7 @@
       },
       "CctvVms.Core/1.0.0": {
         "dependencies": {
-          "LibVLCSharp": "3.8.5"
+          "FFmpeg.AutoGen": "6.0.0"
         },
         "runtime": {
           "CctvVms.Core.dll": {
@@ -1216,19 +1233,12 @@
       "serviceable": false,
       "sha512": ""
     },
-    "LibVLCSharp/3.8.5": {
+    "FFmpeg.AutoGen/6.0.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-dO8YNU5La0wtUM7mUs+V5PBXF9bDTZ5jW+YB2u4cdq633Q+tHAX2HyJrUVaDhH2VvdPVFDghbKfH/GdvHdya6g==",
-      "path": "libvlcsharp/3.8.5",
-      "hashPath": "libvlcsharp.3.8.5.nupkg.sha512"
-    },
-    "LibVLCSharp.WPF/3.8.5": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-R+Z+X3IcwgyTUNKL5LtoPSNHH17+sP0KnRbwUY96lWYxk6xq0yBaI0CU4FlF0g7Dn3b4w+RGj0VqkeRZ2+lN4w==",
-      "path": "libvlcsharp.wpf/3.8.5",
-      "hashPath": "libvlcsharp.wpf.3.8.5.nupkg.sha512"
+      "sha512": "sha512-0fDNHJy9CPj6uf0SzAyuMi7eCMyPpcB5Sb9Cx9cJhqVZPgr8FarJ3ImWLYlXBosN7UcgWe9WvDIE7eLksS37Fg==",
+      "path": "ffmpeg.autogen/6.0.0",
+      "hashPath": "ffmpeg.autogen.6.0.0.nupkg.sha512"
     },
     "Microsoft.Data.Sqlite/8.0.5": {
       "type": "package",
@@ -1257,6 +1267,13 @@
       "sha512": "sha512-cjWrLkJXK0rs4zofsK4bSdg+jhDLTaxrkXu4gS6Y7MAlCvRyNNgwY/lJi5RDlQOnSZweHqoyvgvbdvQsRIW+hg==",
       "path": "microsoft.extensions.dependencyinjection.abstractions/8.0.0",
       "hashPath": "microsoft.extensions.dependencyinjection.abstractions.8.0.0.nupkg.sha512"
+    },
+    "Sdcb.FFmpeg.runtime.windows-x64/6.0.26": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-xGN434r67qRQ1lGH8gkstziwlH2ANnpwzDw6rSEKGzHtaOnWEehy2QKYI8cazr1qW68LJOeerXbb2ufDOMXmpw==",
+      "path": "sdcb.ffmpeg.runtime.windows-x64/6.0.26",
+      "hashPath": "sdcb.ffmpeg.runtime.windows-x64.6.0.26.nupkg.sha512"
     },
     "SQLitePCLRaw.bundle_e_sqlite3/2.1.6": {
       "type": "package",

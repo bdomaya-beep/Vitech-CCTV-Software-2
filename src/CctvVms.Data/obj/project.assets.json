@@ -2,15 +2,15 @@
   "version": 3,
   "targets": {
     "net6.0": {
-      "LibVLCSharp/3.8.5": {
+      "FFmpeg.AutoGen/6.0.0": {
         "type": "package",
         "compile": {
-          "lib/net6.0/LibVLCSharp.dll": {
+          "lib/netstandard2.1/FFmpeg.AutoGen.dll": {
             "related": ".xml"
           }
         },
         "runtime": {
-          "lib/net6.0/LibVLCSharp.dll": {
+          "lib/netstandard2.1/FFmpeg.AutoGen.dll": {
             "related": ".xml"
           }
         }
@@ -188,7 +188,7 @@
         "type": "project",
         "framework": ".NETCoreApp,Version=v6.0",
         "dependencies": {
-          "LibVLCSharp": "3.8.5"
+          "FFmpeg.AutoGen": "6.0.0"
         },
         "compile": {
           "bin/placeholder/CctvVms.Core.dll": {}
@@ -200,51 +200,20 @@
     }
   },
   "libraries": {
-    "LibVLCSharp/3.8.5": {
-      "sha512": "dO8YNU5La0wtUM7mUs+V5PBXF9bDTZ5jW+YB2u4cdq633Q+tHAX2HyJrUVaDhH2VvdPVFDghbKfH/GdvHdya6g==",
+    "FFmpeg.AutoGen/6.0.0": {
+      "sha512": "0fDNHJy9CPj6uf0SzAyuMi7eCMyPpcB5Sb9Cx9cJhqVZPgr8FarJ3ImWLYlXBosN7UcgWe9WvDIE7eLksS37Fg==",
       "type": "package",
-      "path": "libvlcsharp/3.8.5",
+      "path": "ffmpeg.autogen/6.0.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "README.md",
-        "icon.png",
-        "lib/monoandroid81/LibVLCSharp.Android.AWindow.dll",
-        "lib/monoandroid81/LibVLCSharp.dll",
-        "lib/monoandroid81/LibVLCSharp.xml",
-        "lib/net40/LibVLCSharp.dll",
-        "lib/net40/LibVLCSharp.xml",
-        "lib/net471/LibVLCSharp.dll",
-        "lib/net471/LibVLCSharp.xml",
-        "lib/net6.0-android31.0/LibVLCSharp.dll",
-        "lib/net6.0-android31.0/LibVLCSharp.xml",
-        "lib/net6.0-ios16.1/LibVLCSharp.dll",
-        "lib/net6.0-ios16.1/LibVLCSharp.xml",
-        "lib/net6.0-macos13.0/LibVLCSharp.dll",
-        "lib/net6.0-macos13.0/LibVLCSharp.xml",
-        "lib/net6.0-tvos16.1/LibVLCSharp.dll",
-        "lib/net6.0-tvos16.1/LibVLCSharp.xml",
-        "lib/net6.0-windows10.0.17763/LibVLCSharp.dll",
-        "lib/net6.0-windows10.0.17763/LibVLCSharp.pri",
-        "lib/net6.0-windows10.0.17763/LibVLCSharp.xml",
-        "lib/net6.0/LibVLCSharp.dll",
-        "lib/net6.0/LibVLCSharp.xml",
-        "lib/netstandard1.1/LibVLCSharp.dll",
-        "lib/netstandard1.1/LibVLCSharp.xml",
-        "lib/netstandard2.0/LibVLCSharp.dll",
-        "lib/netstandard2.0/LibVLCSharp.xml",
-        "lib/netstandard2.1/LibVLCSharp.dll",
-        "lib/netstandard2.1/LibVLCSharp.xml",
-        "lib/uap10.0.18362/LibVLCSharp.dll",
-        "lib/uap10.0.18362/LibVLCSharp.pri",
-        "lib/uap10.0.18362/LibVLCSharp.xml",
-        "lib/uap10.0.18362/LibVLCSharp/LibVLCSharp.xr.xml",
-        "lib/xamarinios10/LibVLCSharp.dll",
-        "lib/xamarinios10/LibVLCSharp.xml",
-        "lib/xamarinmac20/LibVLCSharp.dll",
-        "lib/xamarinmac20/LibVLCSharp.xml",
-        "libvlcsharp.3.8.5.nupkg.sha512",
-        "libvlcsharp.nuspec"
+        "LICENSE.txt",
+        "ffmpeg.autogen.6.0.0.nupkg.sha512",
+        "ffmpeg.autogen.nuspec",
+        "lib/netstandard2.0/FFmpeg.AutoGen.dll",
+        "lib/netstandard2.0/FFmpeg.AutoGen.xml",
+        "lib/netstandard2.1/FFmpeg.AutoGen.dll",
+        "lib/netstandard2.1/FFmpeg.AutoGen.xml"
       ]
     },
     "Microsoft.Data.Sqlite/8.0.5": {
@@ -408,11 +377,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "c:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.Data\\CctvVms.Data.csproj",
+      "projectUniqueName": "C:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.Data\\CctvVms.Data.csproj",
       "projectName": "CctvVms.Data",
-      "projectPath": "c:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.Data\\CctvVms.Data.csproj",
+      "projectPath": "C:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.Data\\CctvVms.Data.csproj",
       "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
-      "outputPath": "c:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.Data\\obj\\",
+      "outputPath": "C:\\Tracker\\Tipidly\\Vitech-CCTV-Software-2\\src\\CctvVms.Data\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\User\\AppData\\Roaming\\NuGet\\NuGet.Config"

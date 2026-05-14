@@ -1,22 +1,20 @@
-using CctvVms.Core.Domain;
-using LibVLCSharp.Shared;
+﻿using CctvVms.Core.Domain;
+using CctvVms.Core.Streaming;
 
 namespace CctvVms.Core.Contracts;
 
 public sealed class ActiveStreamInfo
 {
-    public string CameraId { get; init; } = string.Empty;
-    public StreamType StreamType { get; init; }
-    public DateTime StartedUtc { get; init; }
-    public bool IsHealthy { get; init; }
-    public MediaPlayer? MediaPlayer { get; init; }
+    public string      CameraId    { get; init; } = string.Empty;
+    public StreamType  StreamType  { get; init; }
+    public DateTime    StartedUtc  { get; init; }
+    public bool        IsHealthy   { get; init; }
+    public IVideoSource? VideoSource { get; init; }
 }
 
 public interface IStreamEngine
 {
-    /// <summary>Prepares a session and acquires a pooled player. Does NOT start playback.</summary>
     Task<ActiveStreamInfo> StartStreamAsync(CameraEntity camera, StreamType streamType, CancellationToken cancellationToken = default);
-    /// <summary>Begins playback for an already-prepared session. Call AFTER tile.MediaPlayer is set so VideoView has a valid HWND.</summary>
     Task BeginPlayAsync(string cameraId, CancellationToken cancellationToken = default);
     Task StopStreamAsync(string cameraId, CancellationToken cancellationToken = default);
     Task<ActiveStreamInfo> SwitchStreamAsync(CameraEntity camera, StreamType newType, CancellationToken cancellationToken = default);

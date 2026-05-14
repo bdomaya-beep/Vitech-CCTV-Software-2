@@ -1,9 +1,9 @@
-<UserControl x:Class="CctvVms.App.Views.Modules.LiveViewControl"
+﻿<UserControl x:Class="CctvVms.App.Views.Modules.LiveViewControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:controls="clr-namespace:CctvVms.App.Views.Controls"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vlc="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"
              mc:Ignorable="d">
     <Grid Background="#080E18">
         <Grid.RowDefinitions>
@@ -18,10 +18,10 @@
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
                     <TextBlock Text="LAYOUT" FontSize="9" FontWeight="Bold" Foreground="#2E4A63"
                                VerticalAlignment="Center" Margin="0,0,10,0" />
-                    <Button Content="1×1" Style="{StaticResource LayoutButtonStyle}" Command="{Binding SetLayoutCommand}" CommandParameter="1x1" Margin="0,0,3,0" />
-                    <Button Content="2×2" Style="{StaticResource LayoutButtonStyle}" Command="{Binding SetLayoutCommand}" CommandParameter="2x2" Margin="0,0,3,0" />
-                    <Button Content="3×3" Style="{StaticResource LayoutButtonStyle}" Command="{Binding SetLayoutCommand}" CommandParameter="3x3" Margin="0,0,3,0" />
-                    <Button Content="4×4" Style="{StaticResource LayoutButtonStyle}" Command="{Binding SetLayoutCommand}" CommandParameter="4x4" />
+                    <Button Content="1Ã—1" Style="{StaticResource LayoutButtonStyle}" Command="{Binding SetLayoutCommand}" CommandParameter="1x1" Margin="0,0,3,0" />
+                    <Button Content="2Ã—2" Style="{StaticResource LayoutButtonStyle}" Command="{Binding SetLayoutCommand}" CommandParameter="2x2" Margin="0,0,3,0" />
+                    <Button Content="3Ã—3" Style="{StaticResource LayoutButtonStyle}" Command="{Binding SetLayoutCommand}" CommandParameter="3x3" Margin="0,0,3,0" />
+                    <Button Content="4Ã—4" Style="{StaticResource LayoutButtonStyle}" Command="{Binding SetLayoutCommand}" CommandParameter="4x4" />
                 </StackPanel>
                 <TextBlock DockPanel.Dock="Right" Text="Double-click a tile to expand" FontSize="11"
                            Foreground="#2E4A63" VerticalAlignment="Center" HorizontalAlignment="Right" />
@@ -53,23 +53,7 @@
                             <!-- Video -->
                             <!-- DataTrigger forces Hidden (not Collapsed) when zoomed in so the Win32 HWND
                                  is not painted over the overlay, while still keeping the stream alive. -->
-                            <vlc:VideoView x:Name="TileVideo"
-                                           MediaPlayer="{Binding MediaPlayer}"
-                                           IsHitTestVisible="False">
-                                <vlc:VideoView.Style>
-                                    <Style TargetType="vlc:VideoView">
-                                        <Setter Property="Visibility"
-                                                Value="{Binding CameraId, Converter={StaticResource StringToVisibilityConverter}}" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding DataContext.IsZoomedIn,
-                                                         RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                         Value="True">
-                                                <Setter Property="Visibility" Value="Hidden" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </vlc:VideoView.Style>
-                            </vlc:VideoView>
+                            <controls:VideoTileControl VideoSource="{Binding VideoSource}" IsHitTestVisible="False" />
 
                             <!-- Empty state -->
                             <Grid Visibility="{Binding CameraId, Converter={StaticResource StringToInverseVisibilityConverter}}">
@@ -89,7 +73,7 @@
                             <Border Background="#CC060C18"
                                     Visibility="{Binding IsDeploying, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <TextBlock Text="Connecting…" Foreground="#00C48C" FontSize="12"
+                                    <TextBlock Text="Connectingâ€¦" Foreground="#00C48C" FontSize="12"
                                                FontWeight="SemiBold" HorizontalAlignment="Center" />
                                 </StackPanel>
                             </Border>
@@ -161,7 +145,7 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Border Background="#000000">
-                            <vlc:VideoView MediaPlayer="{Binding MediaPlayer}" />
+                            <controls:VideoTileControl VideoSource="{Binding VideoSource}" />
                         </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
@@ -171,7 +155,7 @@
             <Border Grid.Row="1" Background="#CC07111F" BorderBrush="#0F2035" BorderThickness="0,1,0,0"
                     Height="40" Padding="14,0">
                 <DockPanel VerticalAlignment="Center">
-                    <Button DockPanel.Dock="Right" Content="↩  Back to Grid"
+                    <Button DockPanel.Dock="Right" Content="â†©  Back to Grid"
                             Style="{StaticResource AccentButtonStyle}"
                             Height="28" Padding="12,0"
                             Command="{Binding ExitZoomCommand}" />
@@ -182,6 +166,7 @@
         </Grid>
     </Grid>
 </UserControl>
+
 
 
 
