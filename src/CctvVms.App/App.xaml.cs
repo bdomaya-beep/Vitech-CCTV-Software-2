@@ -73,7 +73,8 @@ File.WriteAllText(log, ex.ExceptionObject.ToString() ?? "unknown");
 			MaxActiveDecoders = 16,
 			MaxMainStreams = 2,
 			HealthCheckInterval = TimeSpan.FromSeconds(8),
-			StaleSessionThreshold = TimeSpan.FromSeconds(30)
+			StaleSessionThreshold = TimeSpan.FromSeconds(30),
+RtspTransport = "tcp"   // TCP for stable monitoring (WiFi / internet / remote)
 		});		services.AddSingleton<IStreamEngine>(sp => new StreamEngine(sp.GetRequiredService<StreamEngineOptions>()));
 
 		services.AddSingleton<IDataStoreService>(_ => new SqliteDataStoreService(Path.Combine(appData, "vms.db")));
@@ -97,6 +98,7 @@ File.WriteAllText(log, ex.ExceptionObject.ToString() ?? "unknown");
 		services.AddSingleton<MainWindow>();
 	}
 }
+
 
 
 

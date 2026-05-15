@@ -151,6 +151,40 @@ CREATE TABLE IF NOT EXISTS PlaybackRecords (
         return result;
     }
 
+    public async Task<IReadOnlyList<PlaybackRecordEntity>> GetPlaybackRecordsAsync(string cameraId, DateTime rangeStartUtc, DateTime rangeEndUtc, CancellationToken cancellationToken = default)
+    {
+        var result = new List<PlaybackRecordEntity>();
+        await using var connection = new SqliteConnection(_connectionString);
+        await connection.OpenAsync(cancellationToken);
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = @"
+SELECT Id, CameraId, StartUtc, EndUtc, SourceUri
+FROM PlaybackRecords
+WHERE CameraId = $cameraId
+  AND EndUtc > $rangeStartUtc
+  AND StartUtc < $rangeEndUtc
+ORDER BY StartUtc;";
+        command.Parameters.AddWithValue("$cameraId", cameraId);
+        command.Parameters.AddWithValue("$rangeStartUtc", rangeStartUtc.ToString("O"));
+        command.Parameters.AddWithValue("$rangeEndUtc", rangeEndUtc.ToString("O"));
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            result.Add(new PlaybackRecordEntity
+            {
+                Id = reader.GetString(0),
+                CameraId = reader.GetString(1),
+                StartUtc = DateTime.Parse(reader.GetString(2), null, System.Globalization.DateTimeStyles.RoundtripKind),
+                EndUtc = DateTime.Parse(reader.GetString(3), null, System.Globalization.DateTimeStyles.RoundtripKind),
+                SourceUri = reader.GetString(4)
+            });
+        }
+
+        return result;
+    }
+
     public async Task UpsertDeviceAsync(DeviceEntity device, CancellationToken cancellationToken = default)
     {
         await using var connection = new SqliteConnection(_connectionString);

@@ -147,6 +147,102 @@
 
                 </StackPanel>
             </Border>
+            <!-- ── Correct Solution: Queue Strategy ──────────────── -->
+            <Border Margin="0,16,0,0" Padding="16"
+                    Background="#1A1A1A" CornerRadius="6"
+                    BorderBrush="#2A2A2A" BorderThickness="1">
+                <StackPanel>
+
+                    <TextBlock Text="Correct Solution"
+                               FontSize="15" FontWeight="SemiBold"
+                               Foreground="#E0E0E0" Margin="0,0,0,8"/>
+
+                    <TextBlock Text="Use a very small queue."
+                               Foreground="#A0A0A0" Margin="0,0,0,10"/>
+
+                    <TextBlock Text="Example:" Foreground="#A0A0A0" Margin="0,0,0,6"/>
+
+                    <!-- Queue size badge -->
+                    <Border Background="#111" CornerRadius="4" Padding="12,8" Margin="0,0,0,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Queue size = 1 to 3 frames"
+                                       FontFamily="Consolas,Courier New,monospace"
+                                       Foreground="#E0E0E0" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" Content="&#xE8C8;" FontFamily="Segoe MDL2 Assets"
+                                    Background="Transparent" BorderThickness="0"
+                                    Foreground="#808080" Padding="4"
+                                    ToolTip="Copy"
+                                    Command="{Binding CopyQueueSizeCommand}"/>
+                        </Grid>
+                    </Border>
+
+                    <TextBlock Text="When new frame arrives:" Foreground="#A0A0A0" Margin="0,0,0,4"/>
+                    <StackPanel Margin="12,0,0,10">
+                        <TextBlock Text="• discard old frame." Foreground="#909090" Margin="0,2"/>
+                    </StackPanel>
+
+                    <TextBlock Text="Live CCTV should prioritize:" Foreground="#A0A0A0" Margin="0,0,0,6"/>
+
+                    <!-- LATEST frame badge -->
+                    <Border Background="#111" CornerRadius="4" Padding="12,8" Margin="0,0,0,10">
+                        <TextBlock Text="LATEST frame only"
+                                   FontFamily="Consolas,Courier New,monospace"
+                                   Foreground="#E0E0E0"/>
+                    </Border>
+
+                    <TextBlock Text="not old buffered frames."
+                               Foreground="#A0A0A0"/>
+
+                </StackPanel>
+            </Border>
+            <!-- ── Recommended FPS by Mode ───────────────────────── -->
+            <Border Margin="0,16,0,0" Padding="16"
+                    Background="#1A1A1A" CornerRadius="6"
+                    BorderBrush="#2A2A2A" BorderThickness="1">
+                <StackPanel>
+
+                    <TextBlock Text="Recommended"
+                               FontSize="15" FontWeight="SemiBold"
+                               Foreground="#E0E0E0" Margin="0,0,0,12"/>
+
+                    <!-- Table header -->
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="200"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Mode"        FontWeight="SemiBold" Foreground="#A0A0A0"/>
+                        <TextBlock Grid.Column="1" Text="FPS" FontWeight="SemiBold" Foreground="#A0A0A0"/>
+                    </Grid>
+                    <Separator Background="#2A2A2A" Margin="0,0,0,8"/>
+
+                    <!-- Grid View -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="200"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Grid View"   Foreground="#4FC3F7"/>
+                        <TextBlock Grid.Column="1" Text="10 FPS" Foreground="#E0E0E0"/>
+                    </Grid>
+                    <Separator Background="#1E1E1E" Margin="0,0,0,8"/>
+
+                    <!-- Fullscreen -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="200"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Fullscreen"  Foreground="#4FC3F7"/>
+                        <TextBlock Grid.Column="1" Text="25 FPS" Foreground="#E0E0E0"/>
+                    </Grid>
+
+                </StackPanel>
+            </Border>
 
             <!-- ── Main Stream note ───────────────────────────────── -->
             <Border Margin="0,16,0,0" Padding="16"
@@ -165,3 +261,5 @@
         </StackPanel>
     </ScrollViewer>
 </UserControl>
+
+

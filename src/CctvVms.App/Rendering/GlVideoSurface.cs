@@ -1,4 +1,4 @@
-﻿using System.Threading.Channels;
+using System.Threading.Channels;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -9,52 +9,90 @@ namespace CctvVms.App.Rendering;
 
 /// <summary>
 /// Streaming pipeline stages 3-5:
-///   Stage 3 — Frame Queue     : bounded Channel(YUV, size 2, drop-oldest) owned by decoder
-///   Stage 4 — Renderer Thread : YUV → BGR32 on a background thread (not UI)
-///   Stage 5 — UI Thread       : WritePixels (memcpy only, no computation)
+///   Stage 3 - Frame Queue     : bounded Channel(YUV, size 2, drop-oldest) owned by decoder
+///   Stage 4 - Renderer Thread : YUV to BGR32 on a background thread (not UI)
+///   Stage 5 - UI Thread       : WritePixels (memcpy only, no computation)
 /// </summary>
 public sealed class GlVideoSurface : Decorator
 {
     private sealed class BgrFrame
     {
-        public readonly int    Width, Height;
-        public readonly byte[] Data;
-        public BgrFrame(int w, int h, byte[] d) { Width = w; Height = h; Data = d; }
+        public readonly int Width;
+        public readonly int Height;
+        public byte[] Data;
+
+        public BgrFrame(int w, int h, byte[] d)
+        {
+            Width = w;
+            Height = h;
+            Data = d;
+        }
+
+        public void Release() => Data = Array.Empty<byte>();
     }
 
     private readonly Image _img;
     private WriteableBitmap? _bitmap;
 
-    // Stage 4 → Stage 5 handoff: renderer thread writes, UI thread reads (atomic swap)
+    // Stage 4 ? Stage 5 handoff: renderer thread writes, UI thread reads (atomic swap)
     private BgrFrame? _latest;
 
-    private IVideoSource?             _source;
+    private IVideoSource? _source;
     private ChannelReader<VideoFrame>? _reader;
-    private CancellationTokenSource?  _cts;
+    private CancellationTokenSource? _cts;
+    private bool _isRenderingAttached;
 
     public GlVideoSurface()
     {
         _img = new Image { Stretch = Stretch.Uniform };
         RenderOptions.SetBitmapScalingMode(_img, BitmapScalingMode.LowQuality);
         Child = _img;
-        Loaded   += (_, _) => CompositionTarget.Rendering += OnTick;
-        Unloaded += (_, _) => { CompositionTarget.Rendering -= OnTick; Detach(); };
+        Loaded += (_, _) =>
+        {
+            EnsureRenderingAttached();
+            EnsureReaderAttached();
+        };
+        Unloaded += (_, _) =>
+        {
+            EnsureRenderingDetached();
+            StopReader();
+        };
     }
 
     /// <summary>Wires up the full pipeline. Call from VideoTileControl on source change.</summary>
     public void AttachSource(IVideoSource? source)
     {
-        Detach();
-        if (source == null) return;
+        if (ReferenceEquals(_source, source) && _reader != null)
+            return;
 
         _source = source;
-        _cts    = new CancellationTokenSource();
-        _reader = source.Subscribe();   // Stage 3: subscribe to decoder Frame Queue
+        StopReader();
+
+        if (source == null)
+        {
+            _bitmap = null;
+            _img.Source = null;
+            return;
+        }
+
+        if (IsLoaded)
+        {
+            EnsureRenderingAttached();
+            EnsureReaderAttached();
+        }
+    }
+
+    private void EnsureReaderAttached()
+    {
+        if (_source == null || _reader != null)
+            return;
+
+        _cts = new CancellationTokenSource();
+        _reader = _source.Subscribe();
 
         var reader = _reader;
-        var cts    = _cts;
+        var cts = _cts;
 
-        // Stage 4: dedicated Renderer Thread per tile
         _ = Task.Run(async () =>
         {
             try
@@ -62,42 +100,68 @@ public sealed class GlVideoSurface : Decorator
                 await foreach (var frame in reader.ReadAllAsync(cts.Token))
                 {
                     if (!frame.IsValid) continue;
-                    var bgr = ToBgr32(frame);                    // off UI thread
-                    Interlocked.Exchange(ref _latest, bgr);       // atomic latest-frame swap
+
+                    var bgr = ToBgr32(frame);
+                    Interlocked.Exchange(ref _latest, bgr)?.Release();
                 }
             }
             catch (OperationCanceledException) { }
         });
     }
 
-    private void Detach()
+    private void StopReader()
     {
         _cts?.Cancel();
         if (_source != null && _reader != null)
             _source.Unsubscribe(_reader);
-        _source = null;
+
         _reader = null;
-        _cts    = null;
-        Interlocked.Exchange(ref _latest, null);
+        _cts = null;
+        Interlocked.Exchange(ref _latest, null)?.Release();
     }
 
-    // Stage 5: runs on WPF UI thread at ~60fps — only does WritePixels (memcpy)
+    private void EnsureRenderingAttached()
+    {
+        if (_isRenderingAttached)
+            return;
+
+        CompositionTarget.Rendering += OnTick;
+        _isRenderingAttached = true;
+    }
+
+    private void EnsureRenderingDetached()
+    {
+        if (!_isRenderingAttached)
+            return;
+
+        CompositionTarget.Rendering -= OnTick;
+        _isRenderingAttached = false;
+    }
+
     private void OnTick(object? sender, EventArgs e)
     {
         var frame = Interlocked.Exchange(ref _latest, null);
         if (frame == null) return;
 
-        if (_bitmap == null || _bitmap.PixelWidth != frame.Width || _bitmap.PixelHeight != frame.Height)
+        try
         {
-            _bitmap = new WriteableBitmap(frame.Width, frame.Height, 96, 96, PixelFormats.Bgr32, null);
-            _img.Source = _bitmap;
+            if (_bitmap == null || _bitmap.PixelWidth != frame.Width || _bitmap.PixelHeight != frame.Height)
+            {
+                _bitmap = new WriteableBitmap(frame.Width, frame.Height, 96, 96, PixelFormats.Bgr32, null);
+                _img.Source = _bitmap;
+            }
+
+            _bitmap.WritePixels(
+                new Int32Rect(0, 0, frame.Width, frame.Height),
+                frame.Data,
+                frame.Width * 4,
+                0);
         }
-
-        _bitmap.WritePixels(new Int32Rect(0, 0, frame.Width, frame.Height),
-                            frame.Data, frame.Width * 4, 0);
+        finally
+        {
+            frame.Release();
+        }
     }
-
-    // ── YUV → BGR32 conversion (Stage 4, Renderer Thread) ────────────────
 
     private static unsafe BgrFrame ToBgr32(VideoFrame f)
     {
@@ -106,7 +170,7 @@ public sealed class GlVideoSurface : Decorator
         fixed (byte* dst = bgr)
         {
             if (f.Format == VideoPixelFormat.Nv12) ConvertNv12(f, dst, w, h);
-            else                                   ConvertYuv420(f, dst, w, h);
+            else ConvertYuv420(f, dst, w, h);
         }
         return new BgrFrame(w, h, bgr);
     }
@@ -118,9 +182,9 @@ public sealed class GlVideoSurface : Decorator
             int ys = f.Strides[0], uvs = f.Strides[1];
             for (int row = 0; row < h; row++)
             {
-                byte* yr  = yBase  + row * ys;
+                byte* yr = yBase + row * ys;
                 byte* uvr = uvBase + (row >> 1) * uvs;
-                byte* dr  = dst    + row * w * 4;
+                byte* dr = dst + row * w * 4;
                 for (int col = 0; col < w; col++)
                     YuvToBgr(yr[col], uvr[col & ~1], uvr[(col & ~1) + 1], dr + col * 4);
             }
@@ -137,7 +201,7 @@ public sealed class GlVideoSurface : Decorator
                 byte* yr = yBase + row * ys;
                 byte* ur = uBase + (row >> 1) * us;
                 byte* vr = vBase + (row >> 1) * us;
-                byte* dr = dst   + row * w * 4;
+                byte* dr = dst + row * w * 4;
                 for (int col = 0; col < w; col++)
                     YuvToBgr(yr[col], ur[col >> 1], vr[col >> 1], dr + col * 4);
             }

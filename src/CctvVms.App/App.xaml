@@ -1,4 +1,4 @@
-﻿<Application x:Class="CctvVms.App.App"
+<Application x:Class="CctvVms.App.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:infrastructure="clr-namespace:CctvVms.App.Infrastructure"
@@ -14,6 +14,9 @@
         <infrastructure:StreamTypeToBadgeBrushConverter x:Key="StreamTypeToBadgeBrushConverter" />
         <infrastructure:StatusToColorConverter x:Key="StatusToColorConverter" />
         <infrastructure:ModuleToAccentConverter x:Key="ModuleToAccentConverter" />
+        <infrastructure:SecondsToClockConverter x:Key="SecondsToClockConverter" />
+        <infrastructure:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+        <infrastructure:NullToVisibilityConverter x:Key="NotNullToVisibilityConverter" Invert="True" />
 
 
         <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#101826" />

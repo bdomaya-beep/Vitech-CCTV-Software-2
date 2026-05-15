@@ -10,7 +10,7 @@ public sealed class SettingsViewModel : ObservableObject
     private readonly StreamEngineOptions _engineOpts;
     private int    _maxMainStreams    = 4;
     private int    _maxActiveDecoders = 24;
-    private string _rtspTransport    = "TCP";
+    private string _rtspTransport     = "TCP";
 
     public SettingsViewModel(IDataStoreService store, StreamEngineOptions engineOpts)
     {
@@ -31,14 +31,13 @@ public sealed class SettingsViewModel : ObservableObject
         set => SetProperty(ref _maxActiveDecoders, value);
     }
 
-    /// <summary>"TCP" or "UDP". Recommended: TCP for WiFi/internet/remote cameras.</summary>
     public string RtspTransport
     {
         get => _rtspTransport;
         set
         {
             if (SetProperty(ref _rtspTransport, value))
-                _engineOpts.RtspTransport = value.ToLowerInvariant(); // live update
+                _engineOpts.RtspTransport = value.ToLowerInvariant();
         }
     }
 
@@ -48,6 +47,9 @@ public sealed class SettingsViewModel : ObservableObject
 
     public System.Windows.Input.ICommand CopyTcpRecommendationCommand { get; } =
         new RelayCommand(_ => System.Windows.Clipboard.SetText("rtsp_transport=tcp"));
+
+    public System.Windows.Input.ICommand CopyQueueSizeCommand { get; } =
+        new RelayCommand(_ => System.Windows.Clipboard.SetText("Queue size = 1 to 3 frames"));
 
     public async Task LoadAsync()
     {
@@ -61,9 +63,7 @@ public sealed class SettingsViewModel : ObservableObject
 
         if (settings.TryGetValue("RtspTransport", out var transport) &&
             (transport == "TCP" || transport == "UDP"))
-        {
             RtspTransport = transport;
-        }
     }
 
     private async Task SaveAsync()
@@ -77,4 +77,3 @@ public sealed class SettingsViewModel : ObservableObject
         _engineOpts.RtspTransport    = RtspTransport.ToLowerInvariant();
     }
 }
-

@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using CctvVms.Core.Streaming;
 
@@ -16,7 +16,10 @@ public partial class VideoTileControl : UserControl
         set => SetValue(VideoSourceProperty, value);
     }
 
-    public VideoTileControl() => InitializeComponent();
+    public VideoTileControl()
+    {
+        InitializeComponent();
+    }
 
     private static void OnSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {

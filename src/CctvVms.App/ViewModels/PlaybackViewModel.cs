@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using CctvVms.App.Infrastructure;
 using CctvVms.Core.Contracts;
 using CctvVms.Core.Domain;
@@ -26,8 +26,8 @@ public sealed class PlaybackViewModel : ObservableObject
 
         PlayCommand = new AsyncRelayCommand(PlayAsync, () => SelectedCamera is not null);
         _pauseCommand = new RelayCommand(PausePlayback, () => PlaybackSource is not null);
-        _fastForwardCommand = new RelayCommand(() => { PlaybackState = "Playing"; }, () => PlaybackSource is not null);
-        _rewindCommand = new RelayCommand(() => { PlaybackState = "Playing"; }, () => PlaybackSource is not null);
+        _fastForwardCommand = new RelayCommand(() => StepTimeline(30), () => SelectedCamera is not null);
+        _rewindCommand = new RelayCommand(() => StepTimeline(-30), () => SelectedCamera is not null);
         PauseCommand = _pauseCommand;
         FastForwardCommand = _fastForwardCommand;
         RewindCommand = _rewindCommand;
@@ -41,7 +41,11 @@ public sealed class PlaybackViewModel : ObservableObject
         set
         {
             if (SetProperty(ref _selectedCamera, value))
+            {
                 (PlayCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
+                _fastForwardCommand.NotifyCanExecuteChanged();
+                _rewindCommand.NotifyCanExecuteChanged();
+            }
         }
     }
 
@@ -54,7 +58,7 @@ public sealed class PlaybackViewModel : ObservableObject
     public double TimelinePosition
     {
         get => _timelinePosition;
-        set => SetProperty(ref _timelinePosition, value);
+        set => SetProperty(ref _timelinePosition, Math.Clamp(value, 0, 86400));
     }
 
     public string PlaybackState
@@ -94,10 +98,67 @@ public sealed class PlaybackViewModel : ObservableObject
     {
         if (SelectedCamera is null) return;
 
-        var active = await _streamEngine.StartStreamAsync(SelectedCamera, StreamType.Playback);
+        await _streamEngine.StopStreamAsync(SelectedCamera.Id);
+
+        var selectedMomentUtc = ToSelectedMomentUtc();
+        var dayStartUtc = ToLocalDateBoundaryUtc(SelectedDate.Date);
+        var dayEndUtc = ToLocalDateBoundaryUtc(SelectedDate.Date.AddDays(1));
+        var record = await ResolvePlaybackRecordAsync(SelectedCamera.Id, dayStartUtc, dayEndUtc, selectedMomentUtc);
+
+        if (record is null)
+        {
+            PlaybackSource = null;
+            PlaybackState = "No recording found";
+            return;
+        }
+
+        var playbackCamera = new CameraEntity
+        {
+            Id = SelectedCamera.Id,
+            DeviceId = SelectedCamera.DeviceId,
+            Name = SelectedCamera.Name,
+            Channel = SelectedCamera.Channel,
+            Status = SelectedCamera.Status,
+            RtspMainUrl = record.SourceUri,
+            RtspSubUrl = record.SourceUri,
+        };
+
+        var active = await _streamEngine.StartStreamAsync(playbackCamera, StreamType.Playback);
         PlaybackSource = active.VideoSource;
         await _streamEngine.BeginPlayAsync(SelectedCamera.Id);
         PlaybackState = "Playing";
+    }
+
+    private async Task<PlaybackRecordEntity?> ResolvePlaybackRecordAsync(string cameraId, DateTime dayStartUtc, DateTime dayEndUtc, DateTime selectedMomentUtc)
+    {
+        var records = await _store.GetPlaybackRecordsAsync(cameraId, dayStartUtc, dayEndUtc);
+        return records
+            .FirstOrDefault(r => r.StartUtc <= selectedMomentUtc && selectedMomentUtc < r.EndUtc)
+            ?? records.FirstOrDefault(r => r.StartUtc > selectedMomentUtc)
+            ?? records.LastOrDefault();
+    }
+
+    private void StepTimeline(double seconds)
+    {
+        TimelinePosition = Math.Clamp(TimelinePosition + seconds, 0, 86400);
+        if (PlaybackSource is not null)
+            _ = PlayAsync();
+        else
+            PlaybackState = "Ready";
+    }
+
+    private DateTime ToSelectedMomentUtc()
+    {
+        var localMoment = SelectedDate.Date.AddSeconds(Math.Clamp(TimelinePosition, 0, 86400));
+        return ToLocalDateBoundaryUtc(localMoment);
+    }
+
+    private static DateTime ToLocalDateBoundaryUtc(DateTime value)
+    {
+        var local = value.Kind == DateTimeKind.Unspecified
+            ? DateTime.SpecifyKind(value, DateTimeKind.Local)
+            : value.ToLocalTime();
+        return local.ToUniversalTime();
     }
 
     private void PausePlayback()
