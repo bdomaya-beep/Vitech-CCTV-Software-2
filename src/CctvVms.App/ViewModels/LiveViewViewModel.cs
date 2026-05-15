@@ -402,7 +402,7 @@ public sealed class LiveViewViewModel : ObservableObject, IDisposable
         }
     }
 
-    private async Task ExitZoomAsync()
+    internal async Task ExitZoomAsync()
     {
         try { _zoomCts.Cancel(); } catch { }
 

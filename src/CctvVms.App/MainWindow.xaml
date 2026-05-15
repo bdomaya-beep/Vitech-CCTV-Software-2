@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:modules="clr-namespace:CctvVms.App.Views.Modules"
+        xmlns:controls="clr-namespace:CctvVms.App.Views.Controls"
         mc:Ignorable="d"
         Title="Vitech VMS"
         Width="1600" Height="930"
@@ -15,7 +16,6 @@
             <ColumnDefinition Width="72" />
             <ColumnDefinition Width="260" />
             <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="240" />
         </Grid.ColumnDefinitions>
 
         <!-- Icon Sidebar -->
@@ -132,25 +132,75 @@
                 </Grid>
             </Border>
 
-            <modules:DeviceTreeControl Grid.Row="1" DataContext="{Binding DeviceTree}" />
-
-            <!-- Workspace Bar -->
-            <Border Grid.Row="2" Background="#060E1A" BorderBrush="#0F2035" BorderThickness="0,1,0,0" Padding="10,8">
+            <modules:DeviceTreeControl Grid.Row="1" DataContext="{Binding DeviceTree}" />            <!-- Module Footer -->
+            <Border Grid.Row="2" Background="#060E1A" BorderBrush="#0F2035" BorderThickness="0,1,0,0" Padding="10,8"
+                    Visibility="{Binding HasSidebarFooter, Converter={StaticResource BoolToVisibilityConverter}}">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <ComboBox Grid.Column="0" Height="28"
-                              ItemsSource="{Binding LiveWorkspaces}"
-                              DisplayMemberPath="Name"
-                              SelectedItem="{Binding SelectedLiveWorkspace}"
-                              VerticalAlignment="Center" />
-                    <Button Grid.Column="1" Style="{StaticResource GhostButtonStyle}" Content="＋" Width="28" Height="28"
-                            Margin="4,0,0,0" ToolTip="New workspace" Command="{Binding CreateLiveWorkspaceCommand}" />
-                    <Button Grid.Column="2" Style="{StaticResource GhostButtonStyle}" Content="✕" Width="28" Height="28"
-                            Margin="2,0,0,0" ToolTip="Remove workspace" Command="{Binding RemoveLiveWorkspaceCommand}" />
+                    <Grid Visibility="{Binding IsLiveViewModule, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ComboBox Grid.Column="0" Height="28"
+                                  ItemsSource="{Binding LiveWorkspaces}"
+                                  DisplayMemberPath="Name"
+                                  SelectedItem="{Binding SelectedLiveWorkspace}"
+                                  VerticalAlignment="Center" />
+                        <Button Grid.Column="1" Style="{StaticResource GhostButtonStyle}" Content="+" Width="28" Height="28"
+                                Margin="4,0,0,0" ToolTip="New workspace" Command="{Binding CreateLiveWorkspaceCommand}" />
+                        <Button Grid.Column="2" Style="{StaticResource GhostButtonStyle}" Content="?" Width="28" Height="28"
+                                Margin="2,0,0,0" ToolTip="Remove workspace" Command="{Binding RemoveLiveWorkspaceCommand}" />
+                    </Grid>
+
+                    <Border Visibility="{Binding IsPlaybackModule, Converter={StaticResource BoolToVisibilityConverter}}"
+                            Background="#0B1524" BorderBrush="#1B314D" BorderThickness="1" CornerRadius="8" Padding="10,8">
+                        <StackPanel>
+                            <TextBlock Text="Playback Settings" FontSize="11" FontWeight="SemiBold" Foreground="#7F9BB6" />
+                            <TextBlock Margin="0,4,0,8"
+                                       Text="{Binding Playback.SelectedCamera.Name, TargetNullValue=Select a camera from Cameras}"
+                                       Foreground="#000000"
+                                       FontWeight="SemiBold"
+                                       TextWrapping="Wrap" />
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,6,0">
+                                    <TextBlock Text="Record Type" Foreground="#7F9BB6" FontSize="11" Margin="0,0,0,4" />
+                                    <ComboBox Height="28" SelectedIndex="0" Background="#162339" Foreground="#000000" BorderBrush="#24334A">
+                                        <ComboBoxItem Content="All Records" />
+                                    </ComboBox>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                    <TextBlock Text="Stream Type" Foreground="#7F9BB6" FontSize="11" Margin="0,0,0,4" />
+                                    <ComboBox Height="28" SelectedIndex="0" Background="#162339" Foreground="#000000" BorderBrush="#24334A">
+                                        <ComboBoxItem Content="Main Stream" />
+                                        <ComboBoxItem Content="Sub Stream" />
+                                    </ComboBox>
+                                </StackPanel>
+                            </Grid>
+                            <controls:DarkDatePicker SelectedDate="{Binding Playback.SelectedDate, Mode=TwoWay}" Margin="0,0,0,8" />
+                            <Border Background="#0B1524" BorderBrush="#1B314D" BorderThickness="1" CornerRadius="6" Padding="8,6" Margin="0,0,0,8">
+                                <DockPanel>
+                                    <TextBlock Text="Selected Time" Foreground="#7F9BB6" />
+                                    <TextBlock DockPanel.Dock="Right"
+                                               Text="{Binding Playback.TimelinePosition, Converter={StaticResource SecondsToClockConverter}}"
+                                               Foreground="#E6F2FF"
+                                               FontWeight="SemiBold" />
+                                </DockPanel>
+                            </Border>
+                            <DockPanel LastChildFill="False">
+                                <Button DockPanel.Dock="Left" Content="-30s" Width="54" Height="28" Margin="0,0,6,0"
+                                        Style="{StaticResource GhostButtonStyle}" Command="{Binding Playback.RewindCommand}" />
+                                <Button DockPanel.Dock="Left" Content="Pause" Width="58" Height="28" Margin="0,0,6,0"
+                                        Style="{StaticResource LayoutButtonStyle}" Command="{Binding Playback.PauseCommand}" />
+                                <Button DockPanel.Dock="Right" Content="Search" Width="82" Height="30"
+                                        Style="{StaticResource AccentButtonStyle}" Command="{Binding Playback.PlayCommand}" />
+                            </DockPanel>
+                        </StackPanel>
+                    </Border>
                 </Grid>
             </Border>
         </Grid>
@@ -189,44 +239,5 @@
                 <modules:SettingsControl    x:Name="SettingsPage"      DataContext="{Binding Settings}"      Visibility="Collapsed" Opacity="0" />
             </Grid>
         </Grid>
-
-        <!-- Inspector Panel -->
-        <Border Grid.Column="3" Background="#07111F" BorderBrush="#0F2035" BorderThickness="1,0,0,0">
-            <Grid Margin="0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-
-                <Border BorderBrush="#0F2035" BorderThickness="0,0,0,1" Padding="14,12">
-                    <TextBlock Text="INSPECTOR" FontSize="10" FontWeight="Bold" Foreground="#4A6880" />
-                </Border>
-
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="14,14,14,14">
-                        <TextBlock Text="SELECTED CAMERA" FontSize="9" FontWeight="Bold" Foreground="#2E4A63"
-                                   Margin="0,0,0,10" />
-
-                        <TextBlock Text="Name" Style="{StaticResource InspectorLabelStyle}" />
-                        <TextBlock Text="{Binding SelectedCameraName}" Style="{StaticResource InspectorValueStyle}" />
-
-                        <TextBlock Text="Status" Style="{StaticResource InspectorLabelStyle}" />
-                        <TextBlock Text="{Binding SelectedCameraStatus}" Style="{StaticResource InspectorValueStyle}" />
-
-                        <TextBlock Text="Bitrate" Style="{StaticResource InspectorLabelStyle}" />
-                        <TextBlock Text="{Binding SelectedCameraBitrate}" Style="{StaticResource InspectorValueStyle}" />
-
-                        <TextBlock Text="Resolution" Style="{StaticResource InspectorLabelStyle}" />
-                        <TextBlock Text="{Binding SelectedCameraResolution}" Style="{StaticResource InspectorValueStyle}" />
-
-                        <TextBlock Text="FPS" Style="{StaticResource InspectorLabelStyle}" />
-                        <TextBlock Text="{Binding SelectedCameraFps}" Style="{StaticResource InspectorValueStyle}" />
-                    </StackPanel>
-                </ScrollViewer>
-            </Grid>
-        </Border>
     </Grid>
 </Window>
-
-
-

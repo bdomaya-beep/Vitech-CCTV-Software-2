@@ -8,7 +8,7 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="18" MaxWidth="640">
 
-            <!-- ── Streaming Settings ──────────────────────────────── -->
+            <!-- Streaming Settings -->
             <TextBlock Text="Streaming Settings"
                        FontSize="16" FontWeight="SemiBold" Foreground="#E0E0E0"
                        Margin="0,0,0,12"/>
@@ -40,7 +40,7 @@
             <Button Width="120" Height="32" HorizontalAlignment="Left" Margin="0,8,0,0"
                     Content="Save Settings" Command="{Binding SaveCommand}"/>
 
-            <!-- ── Recommendation ─────────────────────────────────── -->
+            <!-- Recommendation -->
             <Border Margin="0,24,0,0" Padding="16"
                     Background="#1A1A1A" CornerRadius="6"
                     BorderBrush="#2A2A2A" BorderThickness="1">
@@ -73,15 +73,15 @@
 
                     <TextBlock Text="especially:" Foreground="#A0A0A0" Margin="0,0,0,4"/>
                     <StackPanel Margin="12,0,0,0">
-                        <TextBlock Text="• WiFi"              Foreground="#909090" Margin="0,2"/>
-                        <TextBlock Text="• internet viewing"  Foreground="#E08040" Margin="0,2"/>
-                        <TextBlock Text="• remote cameras"    Foreground="#909090" Margin="0,2"/>
+                        <TextBlock Text=" WiFi"              Foreground="#909090" Margin="0,2"/>
+                        <TextBlock Text=" internet viewing"  Foreground="#E08040" Margin="0,2"/>
+                        <TextBlock Text=" remote cameras"    Foreground="#909090" Margin="0,2"/>
                     </StackPanel>
 
                 </StackPanel>
             </Border>
 
-            <!-- ── Recommended Live Preview Settings ──────────────── -->
+            <!-- Recommended Live Preview Settings -->
             <Border Margin="0,16,0,0" Padding="16"
                     Background="#1A1A1A" CornerRadius="6"
                     BorderBrush="#2A2A2A" BorderThickness="1">
@@ -109,7 +109,7 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Resolution"        Foreground="#C0C0C0"/>
-                        <TextBlock Grid.Column="1" Text="640×360 or 720p" Foreground="#E0E0E0"/>
+                        <TextBlock Grid.Column="1" Text="640x360 or 720p" Foreground="#E0E0E0"/>
                     </Grid>
                     <Separator Background="#1E1E1E" Margin="0,0,0,8"/>
 
@@ -120,7 +120,7 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="FPS"               Foreground="#C0C0C0"/>
-                        <TextBlock Grid.Column="1" Text="10–15 FPS" Foreground="#E0E0E0"/>
+                        <TextBlock Grid.Column="1" Text="10-15 FPS" Foreground="#E0E0E0"/>
                     </Grid>
                     <Separator Background="#1E1E1E" Margin="0,0,0,8"/>
 
@@ -147,7 +147,7 @@
 
                 </StackPanel>
             </Border>
-            <!-- ── Correct Solution: Queue Strategy ──────────────── -->
+            <!-- Queue Strategy -->
             <Border Margin="0,16,0,0" Padding="16"
                     Background="#1A1A1A" CornerRadius="6"
                     BorderBrush="#2A2A2A" BorderThickness="1">
@@ -182,7 +182,7 @@
 
                     <TextBlock Text="When new frame arrives:" Foreground="#A0A0A0" Margin="0,0,0,4"/>
                     <StackPanel Margin="12,0,0,10">
-                        <TextBlock Text="• discard old frame." Foreground="#909090" Margin="0,2"/>
+                        <TextBlock Text=" discard old frame." Foreground="#909090" Margin="0,2"/>
                     </StackPanel>
 
                     <TextBlock Text="Live CCTV should prioritize:" Foreground="#A0A0A0" Margin="0,0,0,6"/>
@@ -199,13 +199,13 @@
 
                 </StackPanel>
             </Border>
-            <!-- ── Recommended FPS by Mode ───────────────────────── -->
+            <!-- Recommended FPS by Mode -->
             <Border Margin="0,16,0,0" Padding="16"
                     Background="#1A1A1A" CornerRadius="6"
                     BorderBrush="#2A2A2A" BorderThickness="1">
                 <StackPanel>
 
-                    <TextBlock Text="Recommended"
+                    <TextBlock Text="Recommended FPS Settings"
                                FontSize="15" FontWeight="SemiBold"
                                Foreground="#E0E0E0" Margin="0,0,0,12"/>
 
@@ -216,7 +216,7 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Mode"        FontWeight="SemiBold" Foreground="#A0A0A0"/>
-                        <TextBlock Grid.Column="1" Text="FPS" FontWeight="SemiBold" Foreground="#A0A0A0"/>
+                        <TextBlock Grid.Column="1" Text="Recommended FPS" FontWeight="SemiBold" Foreground="#A0A0A0"/>
                     </Grid>
                     <Separator Background="#2A2A2A" Margin="0,0,0,8"/>
 
@@ -226,8 +226,8 @@
                             <ColumnDefinition Width="200"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Grid View"   Foreground="#4FC3F7"/>
-                        <TextBlock Grid.Column="1" Text="10 FPS" Foreground="#E0E0E0"/>
+                        <TextBlock Text="Grid View (Substream)" Foreground="#4FC3F7"/>
+                        <TextBlock Grid.Column="1" Text="8-15 FPS" Foreground="#E0E0E0"/>
                     </Grid>
                     <Separator Background="#1E1E1E" Margin="0,0,0,8"/>
 
@@ -237,14 +237,14 @@
                             <ColumnDefinition Width="200"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Fullscreen"  Foreground="#4FC3F7"/>
-                        <TextBlock Grid.Column="1" Text="25 FPS" Foreground="#E0E0E0"/>
+                        <TextBlock Text="Fullscreen Main Stream" Foreground="#4FC3F7"/>
+                        <TextBlock Grid.Column="1" Text="20-30 FPS" Foreground="#E0E0E0"/>
                     </Grid>
 
                 </StackPanel>
             </Border>
 
-            <!-- ── Main Stream note ───────────────────────────────── -->
+            <!-- Main Stream note -->
             <Border Margin="0,16,0,0" Padding="16"
                     Background="#1A1A1A" CornerRadius="6"
                     BorderBrush="#2A2A2A" BorderThickness="1">
@@ -252,9 +252,9 @@
                     <TextBlock Text="Use Main Stream ONLY For:"
                                FontSize="14" FontWeight="SemiBold"
                                Foreground="#E0E0E0" Margin="0,0,0,8"/>
-                    <TextBlock Text="• fullscreen"  Foreground="#909090" Margin="4,2"/>
-                    <TextBlock Text="• recording"   Foreground="#909090" Margin="4,2"/>
-                    <TextBlock Text="• playback"    Foreground="#909090" Margin="4,2"/>
+                    <TextBlock Text=" fullscreen"  Foreground="#909090" Margin="4,2"/>
+                    <TextBlock Text=" recording"   Foreground="#909090" Margin="4,2"/>
+                    <TextBlock Text=" playback"    Foreground="#909090" Margin="4,2"/>
                 </StackPanel>
             </Border>
 

@@ -1,8 +1,10 @@
+using System.Diagnostics;
 using System.Threading.Channels;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using CctvVms.Core.Domain;
 using CctvVms.Core.Streaming;
 
 namespace CctvVms.App.Rendering;
@@ -34,13 +36,15 @@ public sealed class GlVideoSurface : Decorator
     private readonly Image _img;
     private WriteableBitmap? _bitmap;
 
-    // Stage 4 ? Stage 5 handoff: renderer thread writes, UI thread reads (atomic swap)
+    // Stage 4 -> Stage 5 handoff: renderer thread writes, UI thread reads (atomic swap)
     private BgrFrame? _latest;
+    private static readonly long SubStreamFrameIntervalTicks = (long)(Stopwatch.Frequency / 15.0);
 
     private IVideoSource? _source;
     private ChannelReader<VideoFrame>? _reader;
     private CancellationTokenSource? _cts;
     private bool _isRenderingAttached;
+    private long _lastAcceptedFrameTick;
 
     public GlVideoSurface()
     {
@@ -66,6 +70,7 @@ public sealed class GlVideoSurface : Decorator
             return;
 
         _source = source;
+        _lastAcceptedFrameTick = 0;
         StopReader();
 
         if (source == null)
@@ -92,6 +97,7 @@ public sealed class GlVideoSurface : Decorator
 
         var reader = _reader;
         var cts = _cts;
+        bool limitToGridFps = _source is RtspVideoDecoder decoder && decoder.StreamType == StreamType.Sub;
 
         _ = Task.Run(async () =>
         {
@@ -99,14 +105,31 @@ public sealed class GlVideoSurface : Decorator
             {
                 await foreach (var frame in reader.ReadAllAsync(cts.Token))
                 {
-                    if (!frame.IsValid) continue;
+                    if (!frame.IsValid)
+                        continue;
+
+                    if (limitToGridFps && !ShouldAcceptSubStreamFrame())
+                        continue;
 
                     var bgr = ToBgr32(frame);
                     Interlocked.Exchange(ref _latest, bgr)?.Release();
                 }
             }
-            catch (OperationCanceledException) { }
+            catch (OperationCanceledException)
+            {
+            }
         });
+    }
+
+    private bool ShouldAcceptSubStreamFrame()
+    {
+        var now = Stopwatch.GetTimestamp();
+        var last = Volatile.Read(ref _lastAcceptedFrameTick);
+        if (last != 0 && now - last < SubStreamFrameIntervalTicks)
+            return false;
+
+        Interlocked.Exchange(ref _lastAcceptedFrameTick, now);
+        return true;
     }
 
     private void StopReader()
@@ -141,7 +164,8 @@ public sealed class GlVideoSurface : Decorator
     private void OnTick(object? sender, EventArgs e)
     {
         var frame = Interlocked.Exchange(ref _latest, null);
-        if (frame == null) return;
+        if (frame == null)
+            return;
 
         try
         {
@@ -169,8 +193,10 @@ public sealed class GlVideoSurface : Decorator
         var bgr = new byte[w * h * 4];
         fixed (byte* dst = bgr)
         {
-            if (f.Format == VideoPixelFormat.Nv12) ConvertNv12(f, dst, w, h);
-            else ConvertYuv420(f, dst, w, h);
+            if (f.Format == VideoPixelFormat.Nv12)
+                ConvertNv12(f, dst, w, h);
+            else
+                ConvertYuv420(f, dst, w, h);
         }
         return new BgrFrame(w, h, bgr);
     }

@@ -66,7 +66,8 @@ public sealed class DeviceTreeViewModel : ObservableObject
                 IsExpanded = true
             };
 
-            var cameras = await _dataStore.GetCamerasByDeviceAsync(device.Id);
+            var cameras = (await _dataStore.GetCamerasByDeviceAsync(device.Id)).ToList();
+            await RefreshPlaceholderCameraNamesAsync(device, cameras);
             foreach (var camera in cameras)
             {
                 // Always rebuild RTSP URLs from the NVR device - never connect directly to individual cameras.
@@ -251,6 +252,50 @@ public sealed class DeviceTreeViewModel : ObservableObject
         return $"{deviceName} {channelLabel}";
     }
 
+    private async Task RefreshPlaceholderCameraNamesAsync(DeviceEntity device, List<CameraEntity> cameras)
+    {
+        var placeholders = cameras
+            .Where(c => c.Channel > 0 && IsPlaceholderName(c.Name))
+            .ToList();
+
+        if (placeholders.Count == 0 || string.IsNullOrWhiteSpace(device.IpAddress))
+            return;
+
+        try
+        {
+            var connected = await _nvrConnection.ConnectAndLoadCameras(
+                device.IpAddress,
+                device.Username,
+                device.Password,
+                device.NvrType,
+                ResolveDevicePort(device.NvrType),
+                Math.Max(cameras.Max(c => c.Channel), placeholders.Count));
+
+            var namesByChannel = connected.Cameras
+                .Where(c => int.TryParse(c.Id, out var channel) && !IsPlaceholderName(c.Name))
+                .ToDictionary(c => int.Parse(c.Id), c => c.Name);
+
+            foreach (var camera in placeholders)
+            {
+                if (!namesByChannel.TryGetValue(camera.Channel, out var fetchedName))
+                    continue;
+
+                camera.Name = fetchedName;
+                await _dataStore.UpsertCameraAsync(camera);
+            }
+        }
+        catch
+        {
+            // Keep the persisted placeholder name if the NVR title query fails.
+        }
+    }
+
+    private static int ResolveDevicePort(string nvrType)
+    {
+        var value = (nvrType ?? string.Empty).Trim();
+        return value.Contains("hik", StringComparison.OrdinalIgnoreCase) ? 8000 : 37777;
+    }
+
     private static bool IsPlaceholderName(string? name)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -261,6 +306,10 @@ public sealed class DeviceTreeViewModel : ObservableObject
         var value = name.Trim();
         return value.StartsWith("Channel ", StringComparison.OrdinalIgnoreCase)
                || value.StartsWith("Camera ", StringComparison.OrdinalIgnoreCase)
-               || value.StartsWith("CH ", StringComparison.OrdinalIgnoreCase);
+               || value.StartsWith("CH ", StringComparison.OrdinalIgnoreCase)
+               || value.StartsWith("CCTV Device (", StringComparison.OrdinalIgnoreCase)
+               || System.Text.RegularExpressions.Regex.IsMatch(value, @"\bCH\s+\d+\s*$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
     }
 }
+
+

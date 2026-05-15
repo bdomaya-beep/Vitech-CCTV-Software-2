@@ -558,3 +558,7 @@ C:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.App\bin\Debug\net6.0-windo
 C:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.App\bin\Debug\net6.0-windows\win-x64\swresample-4.dll
 C:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.App\bin\Debug\net6.0-windows\win-x64\swscale-7.dll
 C:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.App\obj\Debug\net6.0-windows\win-x64\Views\Controls\VideoTileControl.baml
+C:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.App\obj\Debug\net6.0-windows\win-x64\Views\Controls\DarkDatePicker.baml
+C:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.App\obj\Debug\net6.0-windows\win-x64\Views\Controls\DarkDatePicker.g.cs
+C:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.App\obj\Debug\net6.0-windows\win-x64\Views\Controls\ZoomableTimelineControl.baml
+C:\Tracker\Tipidly\Vitech-CCTV-Software-2\src\CctvVms.App\obj\Debug\net6.0-windows\win-x64\Views\Controls\ZoomableTimelineControl.g.cs

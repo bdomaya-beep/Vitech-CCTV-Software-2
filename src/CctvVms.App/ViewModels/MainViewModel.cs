@@ -32,6 +32,7 @@ public sealed class MainViewModel : ObservableObject
         Settings = settings;
         LiveView.PropertyChanged += LiveViewOnPropertyChanged;
         LiveView.Tiles.CollectionChanged += TilesOnCollectionChanged;
+        DeviceTree.PropertyChanged += DeviceTreeOnPropertyChanged;
 
         CurrentModuleViewModel = LiveView;
         SwitchModuleCommand = new RelayCommand(SwitchModule);
@@ -83,6 +84,9 @@ public sealed class MainViewModel : ObservableObject
         WorkspaceModule.Settings => "Settings",
         _ => "Live View"
     };
+    public bool IsLiveViewModule => _currentModule == WorkspaceModule.LiveView;
+    public bool IsPlaybackModule => _currentModule == WorkspaceModule.Playback;
+    public bool HasSidebarFooter => IsLiveViewModule || IsPlaybackModule;
 
     public string SelectedCameraName => LiveView.SelectedTile?.CameraName ?? "None";
     public string SelectedCameraStatus => LiveView.SelectedTile?.CameraStatusText ?? "Unknown";
@@ -99,6 +103,7 @@ public sealed class MainViewModel : ObservableObject
         await DeviceTree.LoadAsync();
         await LiveView.InitializeAsync();
         await Playback.InitializeAsync();
+        SyncPlaybackCameraSelection();
         await DeviceManager.LoadAsync();
         await Settings.LoadAsync();
 
@@ -157,6 +162,27 @@ public sealed class MainViewModel : ObservableObject
         RaisePropertyChanged(nameof(SelectedCameraFps));
         RaisePropertyChanged(nameof(ActiveModule));
         RaisePropertyChanged(nameof(ActiveModuleTitle));
+        RaisePropertyChanged(nameof(IsLiveViewModule));
+        RaisePropertyChanged(nameof(IsPlaybackModule));
+        RaisePropertyChanged(nameof(HasSidebarFooter));
+        SyncPlaybackCameraSelection();
+    }
+
+
+    private void DeviceTreeOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(DeviceTreeViewModel.SelectedNode))
+        {
+            SyncPlaybackCameraSelection();
+        }
+    }
+
+    private void SyncPlaybackCameraSelection()
+    {
+        if (DeviceTree.SelectedNode?.Camera is { } camera)
+        {
+            Playback.SelectedCamera = camera;
+        }
     }
 
     private async Task CreateLiveWorkspaceAsync()
@@ -325,6 +351,10 @@ public sealed class MainViewModel : ObservableObject
             RaisePropertyChanged(nameof(SelectedCameraFps));
         RaisePropertyChanged(nameof(ActiveModule));
         RaisePropertyChanged(nameof(ActiveModuleTitle));
+        RaisePropertyChanged(nameof(IsLiveViewModule));
+        RaisePropertyChanged(nameof(IsPlaybackModule));
+        RaisePropertyChanged(nameof(HasSidebarFooter));
+        SyncPlaybackCameraSelection();
             RaisePropertyChanged(nameof(SystemStatusText));
         }
     }

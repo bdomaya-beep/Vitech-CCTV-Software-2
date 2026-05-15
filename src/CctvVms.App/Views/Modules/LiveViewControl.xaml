@@ -5,168 +5,161 @@
              xmlns:controls="clr-namespace:CctvVms.App.Views.Controls"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d">
-    <Grid Background="#080E18">
+    <Grid x:Name="RootGrid" Background="#080E18">
         <Grid.RowDefinitions>
             <RowDefinition Height="40" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Toolbar -->
         <Border Background="#07111F" BorderBrush="#0F2035" BorderThickness="0,0,0,1" Padding="10,0">
             <DockPanel VerticalAlignment="Center">
-                <!-- Layout buttons -->
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
                     <TextBlock Text="LAYOUT" FontSize="9" FontWeight="Bold" Foreground="#2E4A63"
                                VerticalAlignment="Center" Margin="0,0,10,0" />
-                    <Button Content="1Ã—1" Style="{StaticResource LayoutButtonStyle}" Command="{Binding SetLayoutCommand}" CommandParameter="1x1" Margin="0,0,3,0" />
-                    <Button Content="2Ã—2" Style="{StaticResource LayoutButtonStyle}" Command="{Binding SetLayoutCommand}" CommandParameter="2x2" Margin="0,0,3,0" />
-                    <Button Content="3Ã—3" Style="{StaticResource LayoutButtonStyle}" Command="{Binding SetLayoutCommand}" CommandParameter="3x3" Margin="0,0,3,0" />
-                    <Button Content="4Ã—4" Style="{StaticResource LayoutButtonStyle}" Command="{Binding SetLayoutCommand}" CommandParameter="4x4" />
+                    <Button Content="1x1" Style="{StaticResource LayoutButtonStyle}" Command="{Binding SetLayoutCommand}" CommandParameter="1x1" Margin="0,0,3,0" />
+                    <Button Content="2x2" Style="{StaticResource LayoutButtonStyle}" Command="{Binding SetLayoutCommand}" CommandParameter="2x2" Margin="0,0,3,0" />
+                    <Button Content="3x3" Style="{StaticResource LayoutButtonStyle}" Command="{Binding SetLayoutCommand}" CommandParameter="3x3" Margin="0,0,3,0" />
+                    <Button Content="4x4" Style="{StaticResource LayoutButtonStyle}" Command="{Binding SetLayoutCommand}" CommandParameter="4x4" />
                 </StackPanel>
-                <TextBlock DockPanel.Dock="Right" Text="Double-click a tile to expand" FontSize="11"
-                           Foreground="#2E4A63" VerticalAlignment="Center" HorizontalAlignment="Right" />
+
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Double-click a tile to expand" FontSize="11"
+                               Foreground="#2E4A63" VerticalAlignment="Center" Margin="0,0,10,0" />
+                    <Button Content="&#xE740;"
+                            FontFamily="Segoe MDL2 Assets"
+                            Style="{StaticResource GhostButtonStyle}"
+                            Width="28"
+                            Height="28"
+                            Padding="0"
+                            ToolTip="Fullscreen Grid"
+                            Click="FullscreenButton_OnClick" />
+                </StackPanel>
             </DockPanel>
         </Border>
 
-        <!-- Grid view -->
-        <ItemsControl x:Name="TilesItemsControl"
-                      Grid.Row="1"
-                      ItemsSource="{Binding Tiles}"
-                      Margin="6"
-                      >
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <UniformGrid Rows="{Binding Rows}" Columns="{Binding Columns}" />
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Border Margin="3" BorderBrush="#0F2035" BorderThickness="1" CornerRadius="3"
-                            Background="#060C18"
-                            AllowDrop="True"
-                            Drop="Tile_OnDrop"
-                            PreviewMouseLeftButtonDown="Tile_OnPreviewMouseLeftButtonDown"
-                            MouseLeftButtonDown="Tile_OnMouseLeftButtonDown">
-                        <Grid Tag="{Binding TileId}" ClipToBounds="True">
-
-                            <!-- Video -->
-                            <!-- DataTrigger forces Hidden (not Collapsed) when zoomed in so the Win32 HWND
-                                 is not painted over the overlay, while still keeping the stream alive. -->
-                            <controls:VideoTileControl VideoSource="{Binding VideoSource}" IsHitTestVisible="False" />
-
-                            <!-- Empty state -->
-                            <Grid Visibility="{Binding CameraId, Converter={StaticResource StringToInverseVisibilityConverter}}">
-                                <Border Background="#060C18" />
-                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <Border Width="32" Height="32" CornerRadius="16" Background="#0C1A2A"
-                                            HorizontalAlignment="Center" Margin="0,0,0,8">
-                                        <TextBlock Text="+" FontSize="18" Foreground="#1A3050"
-                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                    </Border>
-                                    <TextBlock Text="Drop Camera" Foreground="#1A3050" FontSize="11"
-                                               HorizontalAlignment="Center" />
-                                </StackPanel>
-                            </Grid>
-
-                            <!-- Deploying overlay -->
-                            <Border Background="#CC060C18"
-                                    Visibility="{Binding IsDeploying, Converter={StaticResource BoolToVisibilityConverter}}">
-                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <TextBlock Text="Connectingâ€¦" Foreground="#00C48C" FontSize="12"
-                                               FontWeight="SemiBold" HorizontalAlignment="Center" />
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Top HUD: camera name + stream badge -->
-                            <Border VerticalAlignment="Top" HorizontalAlignment="Stretch" Height="24"
-                                    Visibility="{Binding CameraId, Converter={StaticResource StringToVisibilityConverter}}">
-                                <Border.Background>
-                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                        <GradientStop Color="#CC000000" Offset="0" />
-                                        <GradientStop Color="#00000000" Offset="1" />
-                                    </LinearGradientBrush>
-                                </Border.Background>
-                                <DockPanel Margin="7,4,7,0">
-                                    <Border DockPanel.Dock="Right" CornerRadius="2"
-                                            Background="{Binding StreamType, Converter={StaticResource StreamTypeToBadgeBrushConverter}}"
-                                            Padding="5,1" Margin="4,0,0,0">
-                                        <TextBlock Text="{Binding StreamTypeText}" FontSize="9" FontWeight="Bold"
-                                                   Foreground="#080E18" VerticalAlignment="Center" />
-                                    </Border>
-                                    <TextBlock Text="{Binding CameraName}" FontSize="11" Foreground="#C8DDEF"
-                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                                </DockPanel>
-                            </Border>
-
-                            <!-- Bottom HUD: action buttons -->
-                            <Border VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Height="32"
-                                    Visibility="{Binding CameraId, Converter={StaticResource StringToVisibilityConverter}}">
-                                <Border.Background>
-                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                        <GradientStop Color="#00000000" Offset="0" />
-                                        <GradientStop Color="#CC000000" Offset="1" />
-                                    </LinearGradientBrush>
-                                </Border.Background>
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
-                                            VerticalAlignment="Center" Margin="0,0,6,0">
-                                    <Button Content="Focus" Style="{StaticResource TileActionButtonStyle}"
-                                            Command="{Binding DataContext.FocusTileCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                            CommandParameter="{Binding}" Margin="0,0,4,0" />
-                                    <Button Content="Clear" Style="{StaticResource TileActionButtonStyle}"
-                                            Command="{Binding DataContext.ClearTileCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                            CommandParameter="{Binding}" />
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Hover ring -->
-                            <Border CornerRadius="3" BorderBrush="#00C48C" BorderThickness="1.5"
-                                    IsHitTestVisible="False" Opacity="0" x:Name="HoverRing" />
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-
-        <!-- Zoom / Expanded view -->
-        <Grid Grid.Row="1" Panel.ZIndex="20"
-              Visibility="{Binding IsZoomedIn, Converter={StaticResource BoolToVisibilityConverter}}">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-
-            <ItemsControl Grid.Row="0" ItemsSource="{Binding ZoomTiles}">
+        <Grid x:Name="GridViewHost" Grid.Row="1">
+            <ItemsControl x:Name="TilesItemsControl"
+                          ItemsSource="{Binding Tiles}"
+                          Margin="6">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <Grid />
+                        <UniformGrid Rows="{Binding Rows}" Columns="{Binding Columns}" />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
+
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border Background="#000000">
-                            <controls:VideoTileControl VideoSource="{Binding VideoSource}" />
+                        <Border Margin="3" BorderBrush="#0F2035" BorderThickness="1" CornerRadius="3"
+                                Background="#060C18"
+                                AllowDrop="True"
+                                Drop="Tile_OnDrop"
+                                PreviewMouseLeftButtonDown="Tile_OnPreviewMouseLeftButtonDown"
+                                MouseLeftButtonDown="Tile_OnMouseLeftButtonDown">
+                            <Grid Tag="{Binding TileId}" ClipToBounds="True">
+                                <controls:VideoTileControl VideoSource="{Binding VideoSource}" IsHitTestVisible="False" />
+
+                                <Grid Visibility="{Binding CameraId, Converter={StaticResource StringToInverseVisibilityConverter}}">
+                                    <Border Background="#060C18" />
+                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <Border Width="32" Height="32" CornerRadius="16" Background="#0C1A2A"
+                                                HorizontalAlignment="Center" Margin="0,0,0,8">
+                                            <TextBlock Text="+" FontSize="18" Foreground="#1A3050"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <TextBlock Text="Drop Camera" Foreground="#1A3050" FontSize="11"
+                                                   HorizontalAlignment="Center" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <Border Background="#CC060C18"
+                                        Visibility="{Binding IsDeploying, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <TextBlock Text="Connecting..." Foreground="#00C48C" FontSize="12"
+                                                   FontWeight="SemiBold" HorizontalAlignment="Center" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border VerticalAlignment="Top" HorizontalAlignment="Stretch" Height="24"
+                                        Visibility="{Binding CameraId, Converter={StaticResource StringToVisibilityConverter}}">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                            <GradientStop Color="#CC000000" Offset="0" />
+                                            <GradientStop Color="#00000000" Offset="1" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <DockPanel Margin="7,4,7,0">
+                                        <Border DockPanel.Dock="Right" CornerRadius="2"
+                                                Background="{Binding StreamType, Converter={StaticResource StreamTypeToBadgeBrushConverter}}"
+                                                Padding="5,1" Margin="4,0,0,0">
+                                            <TextBlock Text="{Binding StreamTypeText}" FontSize="9" FontWeight="Bold"
+                                                       Foreground="#080E18" VerticalAlignment="Center" />
+                                        </Border>
+                                        <TextBlock Text="{Binding CameraName}" FontSize="11" Foreground="#C8DDEF"
+                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                    </DockPanel>
+                                </Border>
+
+                                <Border VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Height="32"
+                                        Visibility="{Binding CameraId, Converter={StaticResource StringToVisibilityConverter}}">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                            <GradientStop Color="#00000000" Offset="0" />
+                                            <GradientStop Color="#CC000000" Offset="1" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                                                VerticalAlignment="Center" Margin="0,0,6,0">
+                                        <Button Content="Focus" Style="{StaticResource TileActionButtonStyle}"
+                                                Command="{Binding DataContext.FocusTileCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding}" Margin="0,0,4,0" />
+                                        <Button Content="Clear" Style="{StaticResource TileActionButtonStyle}"
+                                                Command="{Binding DataContext.ClearTileCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding}" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border CornerRadius="3" BorderBrush="#00C48C" BorderThickness="1.5"
+                                        IsHitTestVisible="False" Opacity="0" x:Name="HoverRing" />
+                            </Grid>
                         </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <!-- Exit bar -->
-            <Border Grid.Row="1" Background="#CC07111F" BorderBrush="#0F2035" BorderThickness="0,1,0,0"
-                    Height="40" Padding="14,0">
-                <DockPanel VerticalAlignment="Center">
-                    <Button DockPanel.Dock="Right" Content="â†©  Back to Grid"
-                            Style="{StaticResource AccentButtonStyle}"
-                            Height="28" Padding="12,0"
-                            Command="{Binding ExitZoomCommand}" />
-                    <TextBlock Text="EXPANDED VIEW" FontSize="10" FontWeight="Bold" Foreground="#2E4A63"
-                               VerticalAlignment="Center" />
-                </DockPanel>
-            </Border>
+            <Grid Panel.ZIndex="20"
+                  Visibility="{Binding IsZoomedIn, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <ItemsControl Grid.Row="0" ItemsSource="{Binding ZoomTiles}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <Grid />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="#000000">
+                                <controls:VideoTileControl VideoSource="{Binding VideoSource}" />
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Border Grid.Row="1" Background="#CC07111F" BorderBrush="#0F2035" BorderThickness="0,1,0,0"
+                        Height="40" Padding="14,0">
+                    <DockPanel VerticalAlignment="Center">
+                        <Button DockPanel.Dock="Right" Content="Back to Grid"
+                                Style="{StaticResource AccentButtonStyle}"
+                                Height="28" Padding="12,0"
+                                Command="{Binding ExitZoomCommand}" />
+                        <TextBlock Text="EXPANDED VIEW" FontSize="10" FontWeight="Bold" Foreground="#2E4A63"
+                                   VerticalAlignment="Center" />
+                    </DockPanel>
+                </Border>
+            </Grid>
         </Grid>
     </Grid>
 </UserControl>
-
-
-
-

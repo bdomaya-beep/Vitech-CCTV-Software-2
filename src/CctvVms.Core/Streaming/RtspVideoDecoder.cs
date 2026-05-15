@@ -61,9 +61,10 @@ public sealed class RtspVideoDecoder : IVideoSource, IDisposable
 
     public ChannelReader<VideoFrame> Subscribe()
     {
-        var opts = new BoundedChannelOptions(2)
+        bool isPlayback = StreamType == StreamType.Playback;
+        var opts = new BoundedChannelOptions(isPlayback ? 30 : 6)
         {
-            FullMode = BoundedChannelFullMode.DropOldest,
+            FullMode = isPlayback ? BoundedChannelFullMode.Wait : BoundedChannelFullMode.DropOldest,
             SingleReader = true,
             SingleWriter = true
         };
@@ -116,14 +117,17 @@ public sealed class RtspVideoDecoder : IVideoSource, IDisposable
         {
             AVDictionary* opts = null;
             ffmpeg.av_dict_set(&opts, "rtsp_transport", _transport, 0);
-            ffmpeg.av_dict_set(&opts, "stimeout", "1000000", 0);  // 1000 ms
-            ffmpeg.av_dict_set(&opts, "rw_timeout", "1000000", 0); // 1000 ms
+            ffmpeg.av_dict_set(&opts, "stimeout", "5000000", 0);  // 5000 ms
+            ffmpeg.av_dict_set(&opts, "rw_timeout", "5000000", 0); // 5000 ms
             ffmpeg.av_dict_set(&opts, "tcp_nodelay", "1", 0);
             ffmpeg.av_dict_set(&opts, "analyzeduration", "5000000", 0);
             ffmpeg.av_dict_set(&opts, "probesize", "5000000", 0);
-            ffmpeg.av_dict_set(&opts, "fflags", "nobuffer+discardcorrupt", 0);
-            ffmpeg.av_dict_set(&opts, "flags", "low_delay", 0);
-            ffmpeg.av_dict_set(&opts, "max_delay", "500000", 0);
+            ffmpeg.av_dict_set(&opts, "fflags", "discardcorrupt", 0);
+            if (StreamType != StreamType.Playback)
+            {
+                ffmpeg.av_dict_set(&opts, "flags", "low_delay", 0);
+                ffmpeg.av_dict_set(&opts, "max_delay", "1000000", 0);
+            }
 
             int ret = ffmpeg.avformat_open_input(&fmt, _url, null, &opts);
             ffmpeg.av_dict_free(&opts);
@@ -148,7 +152,7 @@ public sealed class RtspVideoDecoder : IVideoSource, IDisposable
 
             AVCodecContext* ctx = ffmpeg.avcodec_alloc_context3(codec);
             ffmpeg.avcodec_parameters_to_context(ctx, par);
-            ctx->thread_count = 1;
+            ctx->thread_count = StreamType == StreamType.Playback ? Math.Max(2, Environment.ProcessorCount / 2) : 1;
             ctx->flags2 |= ffmpeg.AV_CODEC_FLAG2_FAST;
 
             if (ffmpeg.avcodec_open2(ctx, codec, null) < 0)
@@ -176,7 +180,7 @@ public sealed class RtspVideoDecoder : IVideoSource, IDisposable
 
                         if (r < 0)
                         {
-                            if (IsRetryableReadError(r) && ++consecutiveReadTimeouts < 3)
+                            if (IsRetryableReadError(r) && ++consecutiveReadTimeouts < 12)
                                 continue;
 
                             throw new InvalidOperationException($"av_read_frame error {r}");

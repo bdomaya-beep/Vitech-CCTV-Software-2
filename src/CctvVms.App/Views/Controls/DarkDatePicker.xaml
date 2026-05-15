@@ -1,0 +1,63 @@
+<UserControl x:Class="CctvVms.App.Views.Controls.DarkDatePicker"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <!-- Trigger button showing selected date -->
+        <Button x:Name="ToggleButton"
+                Click="ToggleButton_Click"
+                Background="#162339"
+                BorderBrush="#24334A"
+                BorderThickness="1"
+                Foreground="#E9F1FF"
+                Padding="8,5"
+                HorizontalContentAlignment="Left"
+                Cursor="Hand">
+            <DockPanel>
+                <TextBlock x:Name="DateDisplay" Text="Select date..." VerticalAlignment="Center" />
+                <TextBlock DockPanel.Dock="Right" Text="&#x1F4C5;" FontSize="12"
+                           VerticalAlignment="Center" HorizontalAlignment="Right" Margin="6,0,0,0" />
+            </DockPanel>
+        </Button>
+
+        <!-- Popup calendar -->
+        <Popup x:Name="CalendarPopup"
+               PlacementTarget="{Binding ElementName=ToggleButton}"
+               Placement="Bottom"
+               StaysOpen="False"
+               AllowsTransparency="True"
+               Closed="CalendarPopup_Closed">
+            <Border Background="#0C1424"
+                    BorderBrush="#24334A"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="10"
+                    Width="220">
+                <StackPanel>
+                    <!-- Month/Year header -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="28" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="28" />
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="&#x276E;" Click="PrevMonth_Click"
+                                Background="Transparent" BorderThickness="0"
+                                Foreground="#E9F1FF" FontSize="13" Cursor="Hand" Width="28" Height="28" />
+                        <TextBlock x:Name="MonthYearLabel" Grid.Column="1"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Foreground="#E9F1FF" FontWeight="SemiBold" FontSize="13" />
+                        <Button Grid.Column="2" Content="&#x276F;" Click="NextMonth_Click"
+                                Background="Transparent" BorderThickness="0"
+                                Foreground="#E9F1FF" FontSize="13" Cursor="Hand" Width="28" Height="28" />
+                    </Grid>
+
+                    <!-- Day-of-week headers -->
+                    <UniformGrid x:Name="DayHeaders" Rows="1" Columns="7" Margin="0,0,0,4" />
+
+                    <!-- Day grid -->
+                    <UniformGrid x:Name="DayGrid" Rows="6" Columns="7" />
+                </StackPanel>
+            </Border>
+        </Popup>
+    </Grid>
+</UserControl>

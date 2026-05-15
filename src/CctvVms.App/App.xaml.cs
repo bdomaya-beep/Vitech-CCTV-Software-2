@@ -1,4 +1,4 @@
-﻿using FFmpeg.AutoGen;
+using FFmpeg.AutoGen;
 using System.Windows;
 using System.IO;
 using System.ComponentModel;
@@ -42,10 +42,10 @@ File.WriteAllText(log, ex.ExceptionObject.ToString() ?? "unknown");
 			store.InitializeAsync().Wait();
 
 			var mainViewModel = _serviceProvider.GetRequiredService<MainViewModel>();
-			mainViewModel.InitializeAsync().Wait();
 
-			var window = _serviceProvider.GetRequiredService<MainWindow>();
-			window.Show();
+var window = _serviceProvider.GetRequiredService<MainWindow>();
+window.Show();
+_ = InitializeMainWindowAsync(mainViewModel, window);
 		}
 		catch (Exception ex)
 		{
@@ -57,7 +57,23 @@ File.WriteAllText(log, ex.ExceptionObject.ToString() ?? "unknown");
 		}
 	}
 
-	protected override void OnExit(ExitEventArgs e)
+	private async Task InitializeMainWindowAsync(MainViewModel mainViewModel, Window window)
+{
+try
+{
+await mainViewModel.InitializeAsync();
+}
+catch (Exception ex)
+{
+var innerEx = ex.InnerException ?? ex;
+var logPath = Path.Combine(AppContext.BaseDirectory, "startup_error.log");
+File.WriteAllText(logPath, $"{innerEx.GetType().FullName}: {innerEx.Message}\n\n{innerEx.StackTrace}\n\nOuter: {ex.Message}");
+MessageBox.Show(window, $"Startup Error: {innerEx.Message}\n\n{innerEx.StackTrace}", "Critical Error", MessageBoxButton.OK, MessageBoxImage.Error);
+Shutdown(1);
+}
+}
+
+protected override void OnExit(ExitEventArgs e)
 	{
 		_serviceProvider?.Dispose();
 		base.OnExit(e);
